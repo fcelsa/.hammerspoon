@@ -225,8 +225,8 @@ end
 --- MCalendar:MCalUpdate()
 --- local function that update the canvas when needed.
 local function MCalUpdate()
-    local occluded = obj.MCalCanvas:isOccluded()
-    if occluded then
+    local showing = obj.MCalCanvas:isShowing()
+    if showing then
         --obj.MCalCanvas:bringToFront(true)
         return
     end
@@ -253,7 +253,7 @@ local function MCalUpdate()
     --    print(theHvsl[key] .. " " .. value)
     --end
 
-    obj.logger.i("update ok " .. tostring(occluded))
+    obj.logger.i("update " .. tostring(showing))
 end
 
 
