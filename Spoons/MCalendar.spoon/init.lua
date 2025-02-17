@@ -51,19 +51,25 @@ obj.defW = 300
 obj.defH = 150
 
 -- local function to handle screen saver, lock/unloock events and sleep/wake
+-- Why this? when multiple screens are present, the woke up delay of secondary
+-- screens can cause the canvas to be shown on the wrong screen.
 local function caffeinateController(eventType)
     if eventType == hs.caffeinate.watcher.screensDidUnlock then
         obj.logger.i("Screen unlocked")
-        hs.timer.doAfter(29, function() obj.MCalCanvas:show() end)
+        if not obj.MCalCanvas:isShowing() then
+            hs.timer.doAfter(29, function() obj.MCalCanvas:show() end)
+        end
     elseif eventType == hs.caffeinate.watcher.screensDidLock then
-        obj.logger.i("Screen locked, then hide MCalCanvas")
+        obj.logger.i("Screen locked")
         obj.MCalCanvas:hide()
     elseif eventType == hs.caffeinate.watcher.screensaverDidStart then
         obj.logger.i("Screen saver started")
         obj.MCalCanvas:hide()
     elseif eventType == hs.caffeinate.watcher.screensaverDidStop then
         obj.logger.i("Screen saver stopped")
-        hs.timer.doAfter(29, function() obj.MCalCanvas:show() end)
+        if not obj.MCalCanvas:isShowing() then
+            hs.timer.doAfter(29, function() obj.MCalCanvas:show() end)
+        end
     elseif eventType == hs.caffeinate.watcher.screensDidSleep then
         obj.logger.i("Screen went to sleep")
         obj.MCalCanvas:hide()
@@ -71,10 +77,8 @@ local function caffeinateController(eventType)
         obj.logger.i("Screen woke up")
     elseif eventType == hs.caffeinate.watcher.systemWillSleep then
         obj.logger.i("The system is preparing to sleep")
-        obj.MCalCanvas:stop()
     elseif eventType == hs.caffeinate.watcher.systemDidWake then
         obj.logger.i("The system has woken up")
-        obj.MCalCanvas:init()
     elseif eventType == hs.caffeinate.watcher.systemWillPowerOff then
         obj.logger.i("The system is preparing to power off")
     end
@@ -223,11 +227,10 @@ function obj:MCalCreateCanvas()
 end
 
 --- MCalendar:MCalUpdate()
---- local function that update the canvas when needed.
+--- local function that update the canvas at the first start and every hour
+--- When not showing (the screen it's locked, screen saver running) skip.
 local function MCalUpdate()
-    local showing = obj.MCalCanvas:isShowing()
-    if showing then
-        --obj.MCalCanvas:bringToFront(true)
+    if not obj.MCalCanvas:isShowing() then
         return
     end
 
@@ -253,7 +256,7 @@ local function MCalUpdate()
     --    print(theHvsl[key] .. " " .. value)
     --end
 
-    obj.logger.i("update " .. tostring(showing))
+    obj.logger.i("update ")
 end
 
 
@@ -312,9 +315,9 @@ function obj:start()
                 end
             end
             --if event == "mouseUp" then
-                --obj.MCalCanvas:level(hs.canvas.windowLevels.desktopIcon + 1)
-                --local newSize = { h = currentSize.h, w = obj.defW }
-                --obj.MCalCanvas:size(newSize)
+            --obj.MCalCanvas:level(hs.canvas.windowLevels.desktopIcon + 1)
+            --local newSize = { h = currentSize.h, w = obj.defW }
+            --obj.MCalCanvas:size(newSize)
             --end
         end
     )
