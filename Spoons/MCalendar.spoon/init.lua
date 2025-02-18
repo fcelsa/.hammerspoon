@@ -54,10 +54,12 @@ obj.defH = 150
 -- Why this? when multiple screens are present, the woke up delay of secondary
 -- screens can cause the canvas to be shown on the wrong screen.
 local function caffeinateController(eventType)
+    local mcalVisible = obj.MCalCanvas:isShowing()
+    local needToShow = false
     if eventType == hs.caffeinate.watcher.screensDidUnlock then
         obj.logger.i("Screen unlocked")
-        if not obj.MCalCanvas:isShowing() then
-            hs.timer.doAfter(29, function() obj.MCalCanvas:show() end)
+        if mcalVisible == false then
+            needToShow = true
         end
     elseif eventType == hs.caffeinate.watcher.screensDidLock then
         obj.logger.i("Screen locked")
@@ -67,24 +69,31 @@ local function caffeinateController(eventType)
         obj.MCalCanvas:hide()
     elseif eventType == hs.caffeinate.watcher.screensaverDidStop then
         obj.logger.i("Screen saver stopped")
-        if not obj.MCalCanvas:isShowing() then
-            hs.timer.doAfter(29, function() obj.MCalCanvas:show() end)
+        if mcalVisible == false then
+            needToShow = true
         end
     elseif eventType == hs.caffeinate.watcher.screensDidSleep then
         obj.logger.i("Screen went to sleep")
         obj.MCalCanvas:hide()
     elseif eventType == hs.caffeinate.watcher.screensDidWake then
         obj.logger.i("Screen woke up")
+        if mcalVisible == false then
+            needToShow = true
+        end
     elseif eventType == hs.caffeinate.watcher.systemWillSleep then
         obj.logger.i("The system is preparing to sleep")
     elseif eventType == hs.caffeinate.watcher.systemDidWake then
         obj.logger.i("The system has woken up")
+        if mcalVisible == false then
+            needToShow = true
+        end
     elseif eventType == hs.caffeinate.watcher.systemWillPowerOff then
         obj.logger.i("The system is preparing to power off")
     end
+    if needToShow then
+        hs.timer.doAfter(29, function() obj.MCalCanvas:show() end)
+    end
 end
-
-
 
 -- Internal function used to find our location, so we know where to load files from
 local function script_path()
@@ -230,7 +239,7 @@ end
 --- local function that update the canvas at the first start and every hour
 --- When not showing (the screen it's locked, screen saver running) skip.
 local function MCalUpdate()
-    if not obj.MCalCanvas:isShowing() then
+    if obj.MCalCanvas:isShowing() == false then
         return
     end
 
