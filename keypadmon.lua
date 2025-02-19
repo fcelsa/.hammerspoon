@@ -34,7 +34,7 @@ local INTRO = [[
 local Class = require('./_ClassSingleton')()
 
 function Class:constructor()
-    self.keyboardIdentifier = 3          -- identifier of my num keypad = 40 - set to 0 to identify other
+    self.keyboardIdentifier = 40          -- identifier of my num keypad = 40 - set to 0 to identify other
     self.targetAppId = "de.sfr.calctape"  -- app that want focus
     self.callerAppId = "com.apple.finder" -- Finder it's default caller app if no other identified.
     self.memoryAppId = "" -- last valid caller 
