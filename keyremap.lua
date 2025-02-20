@@ -22,15 +22,6 @@ remap({ 'shift' }, 'forwarddelete', pressFn('help'))
 -- remap them as [%] key [shift]+[5] almost the same on all international keyboard, useful with calc apps.
 remap({}, 'pad=', pressFn('lshift', '5'))
 
--- [HOME] and [END] on macOS set top and end of the page, documents and so on.
--- mapped on [CMD] + left arrow and right arrow to emulate PC behaviur (begin and end of line)
--- Thats not change behaviur of apps like Visual Studio Code that already work like this.
-remap({}, 'home', pressFn('cmd', 'left'))
-remap({}, 'end', pressFn('cmd', 'right'))
-remap({'shift'}, 'home', pressFn({'cmd', 'shift'}, 'left'))
-remap({'shift'}, 'end', pressFn({'cmd', 'shift'}, 'right'))
-
-
 -- some other bindings
 -- [F16] open or focused CalcTape.app ...and return !
 hs.hotkey.bind({}, "f16", function()
