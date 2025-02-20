@@ -39,6 +39,11 @@ obj.pMonths = 2
 --- int screen where want show MCalendar (1 primary screen)
 obj.screenTarget = 2
 
+--- MCalendar.screenCurrent
+--- Variable
+--- int screen where MCalendar is shown
+obj.screenCurrent = 0
+
 --- MCalendar.bgAlpha
 --- Variable
 --- alpha value of the canvas
@@ -128,6 +133,24 @@ local function monthElab(inc)
     return yearE, monthE
 end
 
+--- internal function to get the right bound x for the canvas position (always the most left position of targeted screen)
+local function getRightBoundX(screenTarget)
+    local target = screenTarget or obj.screenTarget
+    local screen = hs.screen.allScreens()
+    local numScreens = #hs.screen.allScreens()
+    local screenFrame = screen[obj.screenTarget]:fullFrame()
+    local rightBoundX = screenFrame.x1
+
+    if numScreens > 1 and target > 1 then
+        rightBoundX = rightBoundX + 14
+    else
+        -- rightBoundX = rightBoundX - (obj.defW + 8)
+        rightBoundX = 8
+    end
+    obj.screenCurrent = target
+    return rightBoundX
+end
+
 --- MCalendar:MCalCreateCanvas()
 --- Method
 --- create the canvas design
@@ -136,22 +159,7 @@ function obj:MCalCreateCanvas()
         return obj.MCalCanvas
     end
 
-    local numScreens = 0
-    for _ in pairs(hs.screen.allScreens()) do
-        numScreens = numScreens + 1
-    end
-
-    local screen = hs.screen.allScreens()
-    local screenFrame = screen[obj.screenTarget]:fullFrame()
-    local rightBoundX = screenFrame.x1
-
-    if numScreens > 1 and obj.screenTarget > 1 then
-        rightBoundX = rightBoundX + 14
-    else
-        -- rightBoundX = rightBoundX - (obj.defW + 8)
-        rightBoundX = 8
-    end
-    -- obj.logger.i("numScreens: " .. tostring(numScreens) .. "  screenFrame: " .. tostring(screenFrame))
+    local rightBoundX = getRightBoundX()
 
     local bgColor = { red = 1, blue = 1, green = 1, alpha = 0.9 }
     local titleColor = { red = 1, blue = 1, green = 1, alpha = 0.7 }
@@ -322,6 +330,21 @@ function obj:start()
                 else
                     obj.MCalCanvas:size(defaultSize)
                 end
+            end
+            if event == "mouseDown" and y < 35 then
+                local numScreens = #hs.screen.allScreens()
+                local target = 1
+                if obj.screenCurrent == 1 and numScreens > 1 then
+                    target = target + 1
+                else
+                    target = 1
+                end
+                local rightBoundX = getRightBoundX(target)
+                obj.MCalCanvas:hide(0.8)
+                hs.timer.doAfter(1.2, function()
+                    obj.MCalCanvas:topLeft { x = rightBoundX, y = 140 }
+                    obj.MCalCanvas:show(0.8)
+                    end)
             end
             --if event == "mouseUp" then
             --obj.MCalCanvas:level(hs.canvas.windowLevels.desktopIcon + 1)
