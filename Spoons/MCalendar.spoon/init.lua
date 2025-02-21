@@ -96,7 +96,7 @@ local function caffeinateController(eventType)
         obj.logger.i("The system is preparing to power off")
     end
     if needToShow then
-        hs.timer.doAfter(29, function() obj.MCalCanvas:show() end)
+        hs.timer.doAfter(29, function() obj.MCalCanvas:show(1.2) end)
     end
 end
 
@@ -298,7 +298,7 @@ function obj:start()
         self.timer:start()
     end
     if self.MCalCanvas then
-        self.MCalCanvas:show()
+        self.MCalCanvas:show(1.2)
         self.MCalCanvas:clickActivating(false)
     end
 
