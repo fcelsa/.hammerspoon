@@ -68,6 +68,9 @@ local snippet = require("snippet")
 -- application watcher - only experiment at the moment.
 -- local appwatcher = require("appwatcher")
 
+local gemini_helper = require("gemini_helper")
+
+
 -- end load external lua source -------------------------------------------------------------------------------------
 
 
