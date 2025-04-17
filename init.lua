@@ -56,13 +56,17 @@ local winswitcher = require("winswitcher")
 local showkey = require("showkey")
 
 -- keypadmon: monitor a secondary keyboard, like numpad to focus specific application on demand.
-local keypadmon = require("keypadmon"):new()
+-- disbled at the moment due to conlifct problem with Maccy application.
+--local keypadmon = require("keypadmon"):new()
 
 -- highlightfocused: show colored border around focused window, all or specific application.
 local highlightfocused = require("highlightfocused")
 
 -- snippet: a popup menu for text snippet insertion or clipboard. Binding on Hyper+v 
 local snippet = require("snippet")
+
+-- application watcher - only experiment at the moment.
+-- local appwatcher = require("appwatcher")
 
 -- end load external lua source -------------------------------------------------------------------------------------
 
