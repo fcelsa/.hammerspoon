@@ -1,4 +1,4 @@
-function showKeyPress(tap_event)
+function ShowKeyPress(tap_event)
     local duration = 1.5 -- popup duration
     local modifiers = "" -- key modifiers string representation
     local flags = tap_event:getFlags()
@@ -64,7 +64,7 @@ function showKeyPress(tap_event)
     -- if we have a simple character (no modifiers), we want a shorter
     -- popup duration.
     if (not flags.shift and not flags.cmd and
-        not flags.alt and not flags.ctrl) then
+            not flags.alt and not flags.ctrl) then
         duration = 0.3
     end
 
@@ -115,7 +115,7 @@ function showKeyPress(tap_event)
     local userData = tap_event:getProperty(hs.eventtap.event.properties.eventSourceUserData)
     local kbdType = tap_event:getProperty(hs.eventtap.event.properties.keyboardEventKeyboardType)
     local tId = tap_event:getProperty(hs.eventtap.event.properties.tabletEventDeviceID)
-    local vId = tap_event:getProperty(hs.eventtap.event.properties.tabletEventVendor1)
+    local vId = tap_event:getProperty(hs.eventtap.event.properties.tabletProximityEventVendorID)
 
     print("Device source: " .. tostring(kbdType) .. "  eventSourceUserData: " .. tostring(userData))
     print("T Id: " .. tostring(tId) .. "  vendor: " .. tostring(vId))
@@ -124,36 +124,32 @@ function showKeyPress(tap_event)
     hs.alert.show(modifiers .. character, duration)
 end
 
--- ottiene una lista dei dispositivi di input disponibili
---local keyboardDevice = nil
---for _, device in ipairs(hs.usb.attachedDevices()) do
---    
---    print(device.productID)
---    print(device.productName)
---    print(device.vendorID)
---    print(device.vendorName)
---
---end
-
-
 local key_tap = hs.eventtap.new(
-  { hs.eventtap.event.types.keyDown },
-    showKeyPress
+    { hs.eventtap.event.types.keyDown },
+    ShowKeyPress
 )
 
 
 -- Enable/Disable Keypress Show Mode with "C-⌘-⇧-p"
-k = hs.hotkey.modal.new({ "cmd", "shift", "ctrl" }, 'P')
+local k = hs.hotkey.modal.new({ "cmd", "shift", "ctrl" }, 'P')
 function k:entered()
-  hs.alert.show("Enabling Keypress Show Mode", 1.5)
-  key_tap:start()
+    hs.alert.show("Enabling Keypress Show Mode", 1.5)
+    key_tap:start()
+    -- ottiene una lista dei dispositivi di input disponibili
+    --local keyboardDevice = nil
+    --for _, device in ipairs(hs.usb.attachedDevices()) do
+    --    print(device.productID)
+    --    print(device.productName)
+    --    print(device.vendorID)
+    --    print(device.vendorName)
+    --end
 end
 
 function k:exited()
-  hs.alert.show("Disabling Keypress Show Mode", 1.5)
+    hs.alert.show("Disabling Keypress Show Mode", 1.5)
 end
 
 k:bind({ "cmd", "shift", "ctrl" }, 'P', function()
-  key_tap:stop()
-  k:exit()
+    key_tap:stop()
+    k:exit()
 end)
