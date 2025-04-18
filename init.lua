@@ -1,6 +1,6 @@
 --[[ hammerspoon init.lua
 configuration file by fcelsa - Fabio Celsalonga
-original written for Sparrow hackintosh workstation on Nov 2017
+Originally written for the Sparrow Hackintosh workstation in November 2017.
 update 14/05/2018 date calendar on menu bar
 update 27/02/2020 experiment whit other menu bar
 update 04/03/2020 add window positioning winposition.lua

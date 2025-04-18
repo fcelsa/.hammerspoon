@@ -5,9 +5,13 @@ hs.hotkey.bind(Hyper, "G", function()
     hs.eventtap.keyStroke({ "cmd" }, "C")
     hs.timer.doAfter(0.3, function()
         local input = hs.pasteboard.getContents()
-        if not input or input == "" then
-            hs.alert.show("📋 No text selected")
+        if not input or input == "" or #input < 4 then
+            hs.alert.show("📋 No or too short selected text")
             return
+        -- Too restrictive, not used for now.
+        --elseif string.match(input, "[%c]") then
+        --    hs.alert.show("📋 Input contains non-printable characters")
+        --    return
         end
         EnglishGrammarCheck(input)
     end)
@@ -74,7 +78,6 @@ Sentence: "]] .. input .. [["
         local parsed = hs.json.decode(textResponse)
         if not parsed then
             hs.alert.show("❌ Failed to parse JSON from Gemini text response")
-            print(textResponse)
             return
         end
 
