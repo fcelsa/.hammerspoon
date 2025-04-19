@@ -3,7 +3,7 @@
 -- like date, special char and other snippet.
 -- The code distinguish from input text, combobox and TextArea fields
 -- to put popup under the text cursor and insert selected snippet, otherwise
--- use mouse pointer coordinates and the snippet are inserted to clipboard.
+-- use mouse pointer coordinates and the selected snippet are inserted to clipboard.
 -- binding default assigned to hyper + v
 --
 --
@@ -67,11 +67,11 @@ local function makePopUpMenu()
             position = hs.geometry({ x = elementBounds.x, y = elementBounds.y + elementBounds.h + elementCorrection })
         end
 
-        scopeDesc = hs.styledtext.new(" 📝 Insert text  ", menuHeaderStyledText)
+        scopeDesc = hs.styledtext.new(" 📝 " .. Str_i18n('SnippetInsTxt'), menuHeaderStyledText)
         scopeIns = true
     else
         position = hs.mouse.absolutePosition()
-        scopeDesc = hs.styledtext.new(" 📎 clipboard copy  ", menuHeaderStyledText)
+        scopeDesc = hs.styledtext.new(" 📎 " .. Str_i18n('SnippetCpyTxt'), menuHeaderStyledText)
         scopeIns = false
     end
 

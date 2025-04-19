@@ -13,19 +13,27 @@ i18n.locales.en = {
     Hello = "Hello",
     Week = "Week",
     KeySym = "Keyboard symbol",
-    KeyAcc = "Special accents"
+    KeyAcc = "Special accents",
+    SnippetInsTxt = "Insert snippet",
+    SnippetCpyTxt = "Copy snippet",
 }
 
 i18n.locales.it = {
     Hello = "Ciao",
     Week = "Settimana",
     KeySym = "Simboli tastiera",
-    KeyAcc = "Accenti speciali"
+    KeyAcc = "Accenti speciali",
+    SnippetInsTxt = "Inserisci",
+    SnippetCpyTxt = "Copia",
 }
 
 i18n.locales.es = {
     Hello = "Hola",
-    Week = "Semana"
+    Week = "Semana",
+    KeySym = "Símbolos de teclado",
+    KeyAcc = "Acentos especiales",
+    SnippetInsTxt = "Insertar",
+    SnippetCpyTxt = "Copiar",
 }
 
 
