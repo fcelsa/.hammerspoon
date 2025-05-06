@@ -168,7 +168,7 @@ function obj:MCalCreateCanvas()
 
     local canvas = hs.canvas.new({
         x = rightBoundX,
-        y = 140,
+        y = 200,
         w = obj.defW,
         h = obj.defH * obj.tMonths,
     })
@@ -342,7 +342,7 @@ function obj:start()
                 local rightBoundX = getRightBoundX(target)
                 obj.MCalCanvas:hide(0.8)
                 hs.timer.doAfter(1.2, function()
-                    obj.MCalCanvas:topLeft { x = rightBoundX, y = 140 }
+                    obj.MCalCanvas:topLeft { x = rightBoundX, y = 200 }
                     obj.MCalCanvas:show(0.8)
                     end)
             end

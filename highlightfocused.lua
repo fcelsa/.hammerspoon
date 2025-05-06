@@ -39,7 +39,8 @@ function DrawCanvas(reason)
         local geometry = hs.geometry.rect(top_left['x'], top_left['y'], size['w'], size['h'])
         local win_title = win:title()
 
-        if string.find(win_title, "CalcTape") then
+        -- Avoid highlighting the settings and about window of CalcTape.
+        if not string.find(win_title, "CalcTape") or not string.find(win_title, "Pref") then
             theCanvas = hs.canvas.new(hs.geometry.rect(top_left['x'] - 16, top_left['y'] - 16, size['w'] + 32,
                 size['h'] + 32))
 

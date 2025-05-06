@@ -24,10 +24,10 @@ Shift_hyper = { "cmd", "alt", "ctrl", "shift" }
 
 -- load external lua source -----------------------------------------------------------------------------------------
 
--- Internationalization file and Locale settings
+-- Internationalization file and Locale settings - attualmente usato solo da snippet.lua
 local i18n = require 'i18n'
 
--- utility functions file
+-- global utility functions file
 local utility = require("utility")
 
 -- special bindings

@@ -44,7 +44,7 @@ hs.hotkey.bind({}, "f16", function()
     end
 end)
 
--- hyper + y open hammerspoon console
+-- hyper + y open/close (show/hide) hammerspoon console window
 hs.hotkey.bind(Hyper, "y", function()
     hs.toggleConsole()
     if not hs.dockicon.visible() then
