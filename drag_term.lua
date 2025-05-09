@@ -12,7 +12,10 @@
 --- hs.eventtap.new should be a global variable and not local, otherwise,
 --- after some time, it stops working due to Lua's garbage collection which
 --- "unloads" local variables from memory after a while.
---- Fabio Celsalonga 1st implementation 10/03/2020 last update 17/02/2025
+--- Fabio Celsalonga 1st implementation on 10/03/2020; last update on 17/02/2025.
+---
+--- Furthermore, remember the defaultWrite option, which allows you to follow the mouse between open terminal windows:
+--- defaults write com.apple.Terminal "FocusFollowsMouse" -bool "true" && killall Terminal
 
 local color = { red = 192 / 255, green = 192 / 255, blue = 220 / 255, alpha = 0.3 }
 local strokeColor = { red = 0 / 255, green = 100 / 255, blue = 255 / 255, alpha = 1 }
