@@ -11,6 +11,7 @@
 -- Inoltre qui è implementato un sistema di misurazione del tempo di esecuzione delle funzioni,
 -- che può essere utile per il debug e l'ottimizzazione delle prestazioni, questa parte è commentata.
 
+local module = {}
 
 local hotkey = require("hs.hotkey")
 local eventtap = require("hs.eventtap")
@@ -54,29 +55,35 @@ local myKeys = {
 
 local myKeysActive = false
 
--- this determines whether or not to enable/disable the keys
-TheModEvent = eventtap.new({ eventtap.event.types.flagsChanged },
-    function(e)
-        local flags = e:rawFlags()
-        -- deviceRightAlternate
-        -- deviceRightCommand
-        -- deviceRightControl
-        -- deviceRightShift
-        -- Corresponds to the right modifiers key on the keyboard (if present)
-        if flags & eventtap.event.rawFlagMasks.deviceRightControl > 0 then
-            if not myKeysActive then
-                for _, v in ipairs(myKeys) do
-                    v:enable()
-                end
-                myKeysActive = true
-            end
-        else
-            if myKeysActive then
-                for _, v in ipairs(myKeys) do
-                    v:disable()
-                end
-                myKeysActive = false
-            end
+local specialBindingHandler = function(e)
+    local flags = e:rawFlags()
+    -- deviceRightAlternate
+    -- deviceRightCommand
+    -- deviceRightControl
+    -- deviceRightShift
+    -- Corresponds to the right modifiers key on the keyboard (if present)
+    if flags & eventtap.event.rawFlagMasks.deviceRightControl > 0 then
+        for _, v in ipairs(myKeys) do
+            v:enable()
         end
+        myKeysActive = true
+    else
+        for _, v in ipairs(myKeys) do
+            v:disable()
+        end
+        myKeysActive = false
     end
-):start()
+end
+
+-- this determines whether or not to enable/disable the keys
+module.TheModEvent = eventtap.new({ eventtap.event.types.flagsChanged }, specialBindingHandler)
+
+module.start = function()
+    module.TheModEvent:start()
+end
+
+module.stop = function()
+    module.TheModEvent:stop()
+end
+
+return module

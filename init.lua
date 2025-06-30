@@ -15,6 +15,10 @@ update Apr 2023 new: my spoon MCalendar to inset calendar on desktop
                 new: file snippet.lua a popup menu to insert or copy date, special char and snippet.
                 new: utility file to collect some useful lua code.
                 new: i18n implementation (rudimentary with simple table)
+update May 2025 new: gemini_helper.lua to manage gemini protocol
+                new: mouse_button.lua example to manage mouse button event
+
+update July 2025 new: added clipboard manager spoon.
 --]]
 
 -- global key bindings defined here for easier referencing.
@@ -24,23 +28,26 @@ Shift_hyper = { "cmd", "alt", "ctrl", "shift" }
 
 -- load external lua source -----------------------------------------------------------------------------------------
 
--- Internationalization file and Locale settings - attualmente usato solo da snippet.lua
-local i18n = require 'i18n'
+-- Internationalization file and Locale settings - attualmente usato solo da snippet.lua e qui in init allo start.
+require('i18n')
 
 -- global utility functions file
-local utility = require("utility")
+require('utility')
 
--- special bindings
-local special_binding = require("special_binding")
+-- special bindings, this for example to bind right modifiers, see comments in special_binding.lua
+local special_binding = require('special_binding')
+special_binding.start()
 
--- menubar
--- local menu_cal = require("menu_cal"):init()
+-- remap keyboard a method to remap key to another key, see comments in keyremap.lua
+require('keyremap')
 
 -- window position managements
-local win_position = require "win_position"
+-- require('win_position')
 
--- remap keyboard
-local keyremap = require "keyremap"
+
+-- menubar  my old calendar inset in the menu bar.
+-- local menu_cal = require("menu_cal"):init()
+
 
 -- netutils: binding on Hyper+p show network connection quality
 local netutils = require "netutils"
@@ -70,6 +77,11 @@ local snippet = require("snippet")
 
 local gemini_helper = require("gemini_helper")
 
+-- Use only if you need to manage additional mouse events, using the start and stop methods appropriately.
+-- local mouse_button = require("mouse_button")
+-- mouse_button.start()
+
+
 
 -- end load external lua source -------------------------------------------------------------------------------------
 
@@ -81,8 +93,9 @@ ImgStatusOff = hs.image.imageFromName("NSStatusUnavailable")
 ImgStatusPrt = hs.image.imageFromName("NSStatusPartiallyAvailable")
 ImgStatusChk = hs.image.imageFromName("NSMenuOnStateTemplate")
 ImgTest = hs.image.imageFromName("NXdefaulticon")
-CalImageCurr = hs.image.imageFromPath(hs.configdir .. "/assets/images/2023.png")
-CalImageNext = hs.image.imageFromPath(hs.configdir .. "/assets/images/2024.png")
+
+-- imageFromPath example.
+-- CalImageNext = hs.image.imageFromPath(hs.configdir .. "/assets/images/2024.png")
 
 -- style definition for screen alert
 local whiteStyle = hs.alert.defaultStyle -- default if none defined on call

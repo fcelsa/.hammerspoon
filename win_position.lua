@@ -1,6 +1,7 @@
 -- win_position
 -- Bind hotkey to move and/or resize window.
--- It's strong personalized to my preferences and workflow
+-- Also add a chooser to select special layout for finder with some experiment with chooser menu.
+-- It's strong personalized to my preferences and workflow.
 -- The code it's almost self explanatory.
 
 MyToolBar = require("hs.webview.toolbar")
