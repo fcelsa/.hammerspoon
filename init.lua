@@ -111,7 +111,7 @@ redStyle.textColor = { red = 239 / 255, green = 239 / 255, blue = 23 / 255, alph
 
 hs.alert.show("🔨  hammerspoon started..." .. Str_i18n('Hello'), whiteStyle, 6)
 
--- hs.notify.new({title='Hammerspoon', informativeText='Config loaded'}):send()
+hs.notify.new({title='Hammerspoon', informativeText='Config loaded'}):send()
 
 
 -- watcher that reload config file when .hammerspoon changed
