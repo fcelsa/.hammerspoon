@@ -37,7 +37,7 @@ obj.pMonths = 2
 --- MCalendar.screenTarget
 --- Variable
 --- int screen where want show MCalendar (1 primary screen)
-obj.screenTarget = 2
+obj.screenTarget = 1
 
 --- MCalendar.screenCurrent
 --- Variable
@@ -333,6 +333,7 @@ function obj:start()
             end
             if event == "mouseDown" and y < 35 then
                 local numScreens = #hs.screen.allScreens()
+                self.logger.i("screens " .. numScreens)
                 local target = 1
                 if obj.screenCurrent == 1 and numScreens > 1 then
                     target = target + 1
@@ -340,11 +341,13 @@ function obj:start()
                     target = 1
                 end
                 local rightBoundX = getRightBoundX(target)
+                self.logger.i("Moving to screen " .. target)
                 obj.MCalCanvas:hide(0.8)
                 hs.timer.doAfter(1.2, function()
                     obj.MCalCanvas:topLeft { x = rightBoundX, y = 200 }
                     obj.MCalCanvas:show(0.8)
-                    end)
+                end)
+                MCalUpdate()
             end
             --if event == "mouseUp" then
             --obj.MCalCanvas:level(hs.canvas.windowLevels.desktopIcon + 1)
