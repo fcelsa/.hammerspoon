@@ -183,6 +183,7 @@ if SkyRocket ~= nil then
         moveModifiers = { 'cmd', 'shift' },
         -- Which modifiers to hold to resize a window?
         resizeModifiers = { 'ctrl', 'shift' },
+        opacity = 0.3,
     })
 end
 
