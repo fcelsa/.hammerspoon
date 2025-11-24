@@ -55,6 +55,9 @@ local netutils = require "netutils"
 -- drag_term: drag mouse with ⌥+shift draw a box to set a terminal window size.
 local drag_term = require("drag_term")
 
+-- ruler: draw a rectangle on screen with [alt]+[command] to draw a rectangle with transparency to use as highliner or ruler
+local ruler = require("ruler")
+
 -- winswitcher: window switch and positioning management.
 local winswitcher = require("winswitcher")
 
@@ -183,7 +186,7 @@ if SkyRocket ~= nil then
         moveModifiers = { 'cmd', 'shift' },
         -- Which modifiers to hold to resize a window?
         resizeModifiers = { 'ctrl', 'shift' },
-        opacity = 0.3,
+        opacity = 0.4,
     })
 end
 

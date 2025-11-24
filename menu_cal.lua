@@ -51,7 +51,7 @@ function objmcal.updateMenucal()
             anno = anno - 1
          end
       elseif inc == 0 then
-         mese = oggiTable.month
+         mese = tonumber(oggiTable.month)|1
       elseif inc >= 1 then
          mese = oggiTable.month + inc
          if mese > 12 then
@@ -79,7 +79,7 @@ function objmcal.updateMenucal()
    }
 
    local menuCalPrevMonth = {
-      { title = monthPrinter(meseElab(-1)),  disabled = true },
+      { title = MonthPrinter(meseElab(-1)),  disabled = true },
       { title = "-" },
     }
    
@@ -94,15 +94,15 @@ function objmcal.updateMenucal()
 
    local Title1 = hs.styledtext.ansi('\27[31mTrkColorPicker\27[0m\n')
    local menucalMenuTable = {
-      { title = monthPrinter(meseElab(0)), menu = menuCalPrevMonth },
+      { title = MonthPrinter(meseElab(0)), menu = menuCalPrevMonth },
       { title = "-" },
-      { title = monthPrinter(meseElab(1)) },
+      { title = MonthPrinter(meseElab(1)) },
       { title = "-" },
-      { title = monthPrinter(meseElab(2)) },
+      { title = MonthPrinter(meseElab(2)) },
       { title = "-" },
-      { title = monthPrinter(meseElab(3)) },
+      { title = MonthPrinter(meseElab(3)) },
       { title = "-" },
-      { title = monthPrinter(meseElab(4)) },
+      { title = MonthPrinter(meseElab(4)) },
       { title = "-" },
       { title = "Notes.app",               fn = function() hs.application.launchOrFocus('Notes.app') end },
       { title = Title1,                    fn = function() hs.application.launchOrFocus('TrkColorPicker') end },
@@ -116,7 +116,7 @@ function objmcal.updateMenucal()
    local dd = os.date("%d")
    local mm = os.date("%m")
    local yy = os.date("%Y")
-   local moonPhaseToday, moonPhaseTodayEmoji = theMoon(dd, mm, yy)
+   local moonPhaseToday, moonPhaseTodayEmoji = TheMoon(dd, mm, yy)
    objmcal.menucalMenu:setTitle("🗓 " .. menucalDateFormat .. " " .. moonPhaseTodayEmoji)
    objmcal.menucalMenu:setTooltip(moonPhaseToday)
    objmcal.menucalMenu:setMenu(menucalMenuTable)

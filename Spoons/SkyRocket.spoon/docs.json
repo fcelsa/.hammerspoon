@@ -1,0 +1,149 @@
+[
+  {
+    "Command": [],
+    "Constant": [],
+    "Constructor": [
+      {
+        "def": "SkyRocket:new(options)",
+        "desc": "Create a SkyRocket resizer for moving/resizing windows with mouse + modifiers.",
+        "doc": "Create and return a resizer instance.\n\nOptions (all optional):\n- `margin` (number): pixel margin used to detect resize zones. Default: 30.\n- `opacity` (number 0..1): preview overlay opacity. Default: 0.3.\n- `moveModifiers` (array): modifiers required for move. Default: `{ 'cmd', 'shift' }`.\n- `moveMouseButton` (string): 'left' or 'right' for move. Default: 'left'.\n- `resizeModifiers` (array): modifiers required for resize. Default: `{ 'ctrl', 'shift' }`.\n- `resizeMouseButton` (string): 'left' or 'right' for resize. Default: 'left'.\n- `disabledApps` (array): app names to ignore.\n\nExample:\n```lua\nlocal resizer = hs.loadSpoon('SkyRocket'):new({\n  margin = 30,\n  opacity = 0.3,\n  moveModifiers = {'alt'},\n  moveMouseButton = 'left',\n  resizeModifiers = {'alt'},\n  resizeMouseButton = 'right',\n})\n```",
+        "name": "new",
+        "signature": "SkyRocket:new(options)",
+        "stripped_doc": "",
+        "type": "Constructor"
+      }
+    ],
+    "Deprecated": [],
+    "Field": [],
+    "Function": [],
+    "Method": [
+      {
+        "def": "resizer:stop()",
+        "desc": "Stop the resizer and hide the preview overlay.",
+        "doc": "Stop event handlers and hide the preview canvas if shown.",
+        "name": "stop",
+        "signature": "resizer:stop()",
+        "stripped_doc": "",
+        "type": "Method"
+      },
+      {
+        "def": "resizer:isResizing()",
+        "desc": "Return true if currently performing a resize.",
+        "doc": "Returns `true` when the resizer is in resize state.",
+        "name": "isResizing",
+        "signature": "resizer:isResizing()",
+        "stripped_doc": "",
+        "type": "Method"
+      },
+      {
+        "def": "resizer:isMoving()",
+        "desc": "Return true if currently performing a move.",
+        "doc": "Returns `true` when the resizer is in move state.",
+        "name": "isMoving",
+        "signature": "resizer:isMoving()",
+        "stripped_doc": "",
+        "type": "Method"
+      }
+    ],
+    "Variable": [
+      {
+        "def": "options.margin",
+        "desc": "Pixel margin used to detect resize zones near edges. Default: 30.",
+        "doc": "Controls how close the cursor must be to a window edge to select a resize direction.",
+        "name": "margin",
+        "signature": "options.margin",
+        "stripped_doc": "",
+        "type": "Variable"
+      },
+      {
+        "def": "options.opacity",
+        "desc": "Overlay opacity during drag (0..1). Default: 0.3.",
+        "doc": "Sets the transparency of the semi-transparent preview overlay.",
+        "name": "opacity",
+        "signature": "options.opacity",
+        "stripped_doc": "",
+        "type": "Variable"
+      },
+      {
+        "def": "options.moveModifiers",
+        "desc": "Modifiers for move action. Default: `{ 'cmd', 'shift' }`.",
+        "doc": "List of modifier keys required to perform a move action.",
+        "name": "moveModifiers",
+        "signature": "options.moveModifiers",
+        "stripped_doc": "",
+        "type": "Variable"
+      },
+      {
+        "def": "options.resizeModifiers",
+        "desc": "Modifiers for resize action. Default: `{ 'ctrl', 'shift' }`.",
+        "doc": "List of modifier keys required to perform a resize action.",
+        "name": "resizeModifiers",
+        "signature": "options.resizeModifiers",
+        "stripped_doc": "",
+        "type": "Variable"
+      },
+      {
+        "def": "options.moveMouseButton / options.resizeMouseButton",
+        "desc": "Mouse button for actions: 'left' or 'right'.",
+        "doc": "Specify which mouse button triggers move or resize (accepted values: 'left', 'right').",
+        "name": "moveMouseButton",
+        "signature": "options.moveMouseButton",
+        "stripped_doc": "",
+        "type": "Variable"
+      },
+      {
+        "def": "options.disabledApps",
+        "desc": "Array of application names to ignore.",
+        "doc": "If the target window's application is listed, SkyRocket will ignore drag actions for it.",
+        "name": "disabledApps",
+        "signature": "options.disabledApps",
+        "stripped_doc": "",
+        "type": "Variable"
+      }
+    ],
+    "desc": "Move and resize windows with mouse + modifiers and a preview overlay.",
+    "doc": "SkyRocket enables moving and resizing windows using modifier keys + mouse. A semi-transparent overlay shows the target frame while dragging. Main options: `margin`, `opacity`, `moveModifiers`, `moveMouseButton`, `resizeModifiers`, `resizeMouseButton`, `disabledApps`.",
+    "items": [
+      {
+        "def": "SkyRocket:new(options)",
+        "desc": "Create a new resizer instance.",
+        "doc": "See Constructor for supported options.",
+        "name": "new",
+        "signature": "SkyRocket:new(options)",
+        "stripped_doc": "",
+        "type": "Constructor"
+      },
+      {
+        "def": "resizer:stop()",
+        "desc": "Stop resizer and hide overlay.",
+        "doc": "Stop event handlers and restore idle state.",
+        "name": "stop",
+        "signature": "resizer:stop()",
+        "stripped_doc": "",
+        "type": "Method"
+      },
+      {
+        "def": "resizer:isResizing()",
+        "desc": "True when resizing.",
+        "doc": "Returns `true` if the resizer is currently performing a resize.",
+        "name": "isResizing",
+        "signature": "resizer:isResizing()",
+        "stripped_doc": "",
+        "type": "Method"
+      },
+      {
+        "def": "resizer:isMoving()",
+        "desc": "True when moving.",
+        "doc": "Returns `true` if the resizer is currently performing a move.",
+        "name": "isMoving",
+        "signature": "resizer:isMoving()",
+        "stripped_doc": "",
+        "type": "Method"
+      }
+    ],
+    "name": "SkyRocket",
+    "stripped_doc": "Move and resize windows with mouse + modifiers and a preview overlay.",
+    "submodules": [],
+    "type": "Module"
+  }
+]
