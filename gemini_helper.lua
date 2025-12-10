@@ -1,5 +1,5 @@
 require("api_keys")
-local geminiApiKey = GEMINI_API_KEY
+local geminiApiKey = GEMINI_WS_API_KEY
 
 hs.hotkey.bind(Hyper, "G", function()
     hs.eventtap.keyStroke({ "cmd" }, "C")
@@ -8,10 +8,10 @@ hs.hotkey.bind(Hyper, "G", function()
         if not input or input == "" or #input < 4 then
             hs.alert.show("📋 No or too short selected text")
             return
-        -- Too restrictive, not used for now.
-        --elseif string.match(input, "[%c]") then
-        --    hs.alert.show("📋 Input contains non-printable characters")
-        --    return
+            -- Too restrictive, not used for now.
+            --elseif string.match(input, "[%c]") then
+            --    hs.alert.show("📋 Input contains non-printable characters")
+            --    return
         end
         EnglishGrammarCheck(input)
     end)
@@ -44,7 +44,8 @@ Sentence: "]] .. input .. [["
         }
     })
 
-    local url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" ..
+    -- "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+    local url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" ..
         geminiApiKey
 
     -- Send Request to Gemini
