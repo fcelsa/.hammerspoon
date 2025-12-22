@@ -2,48 +2,74 @@
 --
 -- set specific special binding, that distinguish from left and right modifiers.
 -- Implemented in the efficient way as clarified here by asmagill: https://github.com/Hammerspoon/hammerspoon/discussions/3113#discussioncomment-3341851
--- In short, as explained in the link above, hs.hotkey cannot handle the right and left modifier keys, 
+-- In short, as explained in the link above, hs.hotkey cannot handle the right and left modifier keys,
 -- so hs.eventtap is used to intercept events and then hs.hotkey functions are used to perform the actions.
 -- Pay attention to potential conflicts with other applications that may use the same key combinations.
 -- Further useful information on this topic is available here: https://github.com/Hammerspoon/hammerspoon/issues/1128
 --
 -- Questo codice non è effettivamente utilizzato per scopi specifici, è qui per eventuali esigenze future.
--- Inoltre qui è implementato un sistema di misurazione del tempo di esecuzione delle funzioni,
--- che può essere utile per il debug e l'ottimizzazione delle prestazioni, questa parte è commentata.
+-- Inoltre qui è implementato il sistema di misurazione del tempo di esecuzione delle funzioni,
+-- che può essere utile per il debug e l'ottimizzazione delle prestazioni, questa parte è commentata,
+-- chiama la funzione Measurement definita globalmente in utility.lua.
 
 local module = {}
 
 local hotkey = require("hs.hotkey")
 local eventtap = require("hs.eventtap")
 local keycodes = require("hs.keycodes")
+local window = require("hs.window")
 
-local alert = require("hs.alert")
-local alertUid = 0
-
--- This function shows how to manage hs.alert so that they do not appear one below the other in cascade,
--- but always close the previous alert before showing a new one.
 local function handleRightModifierKey(myKey)
-    if alertUid ~= 0 then
-        alert.closeAll(3)
-        alertUid = 0
-    end
-    alertUid = alert("RightControl + " .. myKey .. " was pressed", 3)
+    Switch(myKey, {
+        ['pad1'] = function()
+            window.focusedWindow():moveToUnit({ 0.0, 0.5, 0.5, 0.5 })
+        end,
+        ['pad2'] = function()
+            window.focusedWindow():moveToUnit({0, 0.5, 1, 0.5})
+        end,
+        ['pad3'] = function()
+            window.focusedWindow():moveToUnit({ 0.5, 0.5, 0.5, 0.5 })
+        end,
+        ['pad4'] = function()
+            window.focusedWindow():moveToUnit({0, 0, 0.5, 1})
+        end,
+        ['pad5'] = function()
+            window.focusedWindow():centerOnScreen()
+        end,
+        ['pad6'] = function()
+            window.focusedWindow():moveToUnit({0.5, 0, 0.5, 1})
+        end,
+        ['pad7'] = function()
+            window.focusedWindow():moveToUnit({ 0, 0, 0.5, 0.5 })
+        end,
+        ['pad8'] = function()
+            window.focusedWindow():moveToUnit({0, 0, 1, 0.5})
+        end,
+        ['pad9'] = function()
+            window.focusedWindow():moveToUnit({0.5, 0, 0.5, 0.5})
+        end,
+        ['pad0'] = function()
+            window.switcher.nextWindow()
+        end,
+        ['default'] = function()
+            print("No case matched for " .. myKey)
+        end
+    })
 end
 
 
 -- set up your hotkeys in this table:
 local myKeys = {
-    hotkey.new({ "ctrl" }, "pad1", function() handleRightModifierKey("pad1") end),
-    -- hotkey.new({ "ctrl" }, "pad2", function() alert("2 was pressed") end),
-    -- hotkey.new({ "ctrl" }, "pad3",
-    --     function() Measurement('event mod intercepting ', function() alert("3 was pressed") end) end),
-    hotkey.new({ "ctrl" }, "pad4", function() handleRightModifierKey("pad4") end),
-    -- hotkey.new({ "ctrl" }, "pad5", function() alert("5 was pressed") end),
-    -- hotkey.new({ "ctrl" }, "pad6", function() alert("6 was pressed") end),
-    hotkey.new({ "ctrl" }, "pad7", function() handleRightModifierKey("pad7") end),
-    -- hotkey.new({ "ctrl" }, "pad8", function() alert("8 was pressed") end),
-    -- hotkey.new({ "ctrl" }, "pad9", function() alert("9 was pressed") end),
-    -- hotkey.new({ "ctrl" }, "pad0", function() alert("0 was pressed") end),
+    hotkey.new({ "ctrl", "shift" }, "pad1", function() handleRightModifierKey("pad1") end),
+    hotkey.new({ "ctrl", "shift" }, "pad2", function() handleRightModifierKey("pad2") end),
+    hotkey.new({ "ctrl", "shift" }, "pad3", function() handleRightModifierKey("pad3") end),
+    hotkey.new({ "ctrl", "shift" }, "pad4", function() handleRightModifierKey("pad4") end),
+    hotkey.new({ "ctrl", "shift" }, "pad5", function() handleRightModifierKey("pad5") end),
+    hotkey.new({ "ctrl", "shift" }, "pad6", function() handleRightModifierKey("pad6") end),
+    hotkey.new({ "ctrl", "shift" }, "pad7", function() handleRightModifierKey("pad7") end),
+    hotkey.new({ "ctrl", "shift" }, "pad8", function() handleRightModifierKey("pad8") end),
+    hotkey.new({ "ctrl", "shift" }, "pad9", function() handleRightModifierKey("pad9") end),
+    hotkey.new({ "ctrl", "shift" }, "pad0", function() handleRightModifierKey("pad0") end),
     -- hotkey.new({ "ctrl" }, "pad.", function() alert(". was pressed") end),
     -- hotkey.new({ "ctrl" }, "pad+", function() alert("+ was pressed") end),
     -- hotkey.new({ "ctrl" }, "pad-", function() alert("- was pressed") end),

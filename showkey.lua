@@ -99,7 +99,7 @@ function ShowKeyPress(tap_event)
 
     -- get modifiers' string representation
     if flags.ctrl then
-        modifiers = modifiers .. "C-"
+        modifiers = modifiers .. "^-"
     end
     if flags.cmd then
         modifiers = modifiers .. "⌘-"

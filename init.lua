@@ -1,24 +1,26 @@
 --[[ hammerspoon init.lua
 configuration file by fcelsa - Fabio Celsalonga
 Originally written for the Sparrow Hackintosh workstation in November 2017.
-update 14/05/2018 date calendar on menu bar
-update 27/02/2020 experiment whit other menu bar
-update 04/03/2020 add window positioning winposition.lua
-update 09/03/2020 add drag_term.lua
-update 14/03/2020 fix and extend calendar for menubar added moonphase
-update Apr 2020 for new workstation "Prime"
-update 10/07/2020 little refactoring and changed [ins] key map to [shift]+[forwarddelete]
-update 27/12/2022 Experiment with ClipBoardTool
-update 15/02/2023 Enabled modified version of HCalendar spoon
-update 18/03/2023 new external module for keybinding and experiment with attached num keypad.
-update Apr 2023 new: my spoon MCalendar to inset calendar on desktop
+Changelog:
+    14/05/2018 date calendar on menu bar
+    27/02/2020 experiment whit other menu bar
+    04/03/2020 add window positioning winposition.lua
+    09/03/2020 add drag_term.lua
+    14/03/2020 fix and extend calendar for menubar added moonphase
+    Apr 2020 for new workstation "Prime"
+    10/07/2020 little refactoring and changed [ins] key map to [shift]+[forwarddelete]
+    27/12/2022 Experiment with ClipBoardTool
+    15/02/2023 Enabled modified version of HCalendar spoon
+    18/03/2023 new external module for keybinding and experiment with attached num keypad.
+    Apr 2023    new: my spoon MCalendar to inset calendar on desktop
                 new: file snippet.lua a popup menu to insert or copy date, special char and snippet.
                 new: utility file to collect some useful lua code.
                 new: i18n implementation (rudimentary with simple table)
-update May 2025 new: gemini_helper.lua to manage gemini protocol
+    May 2025    new: gemini_helper.lua to manage gemini protocol
                 new: mouse_button.lua example to manage mouse button event
-
-update July 2025 new: added clipboard manager spoon.
+    Jul 2025    new: other experiment with clipboardtool, at the end preferred Maccy app.
+    Dec 2025    code, comments and doc refactoring.
+                new: ...
 --]]
 
 -- global key bindings defined here for easier referencing.
@@ -26,12 +28,12 @@ Hyper = { "cmd", "alt", "ctrl" }
 Shift_hyper = { "cmd", "alt", "ctrl", "shift" }
 
 
--- load external lua source -----------------------------------------------------------------------------------------
+-- load external source -----------------------------------------------------------------------------------------
 
--- Internationalization file and Locale settings - attualmente usato solo da snippet.lua e qui in init allo start.
+-- Internationalization file and Locale settings - at the moment used by init and snippet
 require('i18n')
 
--- global utility functions file
+-- global lua utility functions
 require('utility')
 
 -- special bindings, this for example to bind right modifiers, see comments in special_binding.lua
@@ -42,12 +44,10 @@ special_binding.start()
 require('keyremap')
 
 -- window position managements
--- require('win_position')
-
+require('win_position')
 
 -- menubar  my old calendar inset in the menu bar.
 -- local menu_cal = require("menu_cal"):init()
-
 
 -- netutils: binding on Hyper+p show network connection quality
 local netutils = require "netutils"

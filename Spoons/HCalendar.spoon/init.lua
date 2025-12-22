@@ -18,7 +18,7 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 obj.hcalw = 31*24+20
 obj.hcalh = 100
-obj.midlinecolor = {red=1, blue=1, gree=1, alpha=0.5}
+obj.midlinecolor = {red=1, blue=1, green=1, alpha=0.5}
 
 
 -- parte aggiunta per showimage

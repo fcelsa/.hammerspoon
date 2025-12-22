@@ -21,7 +21,6 @@ local color = { red = 192 / 255, green = 192 / 255, blue = 220 / 255, alpha = 0.
 local strokeColor = { red = 0 / 255, green = 100 / 255, blue = 255 / 255, alpha = 1 }
 
 local fromPoint = nil
-local currentSpace = nil
 
 local rectanglePreview = hs.drawing.rectangle(hs.geometry.rect(0, 0, 0, 0))
 rectanglePreview:setStrokeWidth(4)
@@ -36,28 +35,19 @@ local function OpenTerminal()
     local termFocused = false
     local termAppRunning = nil
     local win = nil
-    local termSpaces = nil
+
     if frame.w >= 320 and frame.h >= 240 then
         termAppRunning = hs.application.get("com.apple.Terminal")
         termFocused = hs.application.launchOrFocus("Terminal")
         if termAppRunning ~= nil and termFocused then
             win = hs.window.focusedWindow()
-            termSpaces = hs.spaces.windowSpaces(win:id())[1]
             local f = win:frame()
             f.x = frame.x
             f.y = frame.y
             f.w = frame.w
             f.h = frame.h
             win:setFrame(f)
-            -- move window to current space before focusing to avoid switching spaces when needs
-            -- not working on macOS 14 and 15 due to hs.spaces.moveWindowToSpace not working properly
-            -- we leave it here for future reference and possible fixes.
-            if currentSpace ~= termSpaces then
-                if hs.spaces.moveWindowToSpace(win, currentSpace) then
-                    print("window moved ... termSpaces: " .. tostring(termSpaces) .. ", currentSpace: " .. tostring(currentSpace))
-                end
-            end
-        elseif termAppRunning == nil and termFocused then  -- I'm sure that can be done better
+        elseif termAppRunning == nil and termFocused then -- I'm sure that can be done better
             hs.timer.doAfter(1, function()
                 win = hs.window.focusedWindow()
                 local f = win:frame()
@@ -95,7 +85,6 @@ FlagsEvent = hs.eventtap.new(
         local flags = e:getFlags()
         if flags.alt and flags.shift then
             fromPoint = hs.mouse.absolutePosition()
-            currentSpace = hs.spaces.focusedSpace()
             local startFrame = hs.geometry.rect(fromPoint.x, fromPoint.y, 0, 0)
             rectanglePreview:setFrame(startFrame)
             DragEvent:start()
