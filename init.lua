@@ -21,14 +21,14 @@ Changelog:
     Jul 2025    new: other experiment with clipboardtool, at the end preferred Maccy app.
     Dec 2025    code, comments and doc refactoring.
                 new: ...
+    Feb 2026    new: system to manage configuration per host.
 --]]
 
 -- global key bindings defined here for easier referencing.
 Hyper = { "cmd", "alt", "ctrl" }
 Shift_hyper = { "cmd", "alt", "ctrl", "shift" }
 
-
--- load external source -----------------------------------------------------------------------------------------
+-- load common external source -----------------------------------------------------------------------------------------
 
 -- Internationalization file and Locale settings - at the moment used by init and snippet
 require('i18n')
@@ -84,8 +84,6 @@ local gemini_helper = require("gemini_helper")
 -- local mouse_button = require("mouse_button")
 -- mouse_button.start()
 
-
-
 -- end load external lua source -------------------------------------------------------------------------------------
 
 
@@ -112,9 +110,10 @@ redStyle.textColor = { white = 0.0, alpha = 1.0 }
 redStyle.textSize = 64
 redStyle.textColor = { red = 239 / 255, green = 239 / 255, blue = 23 / 255, alpha = 0.8 }
 
-hs.alert.show("🔨  hammerspoon started..." .. Str_i18n('Hello'), whiteStyle, 6)
+local hostName = hs.host.localizedName()
+hs.alert.show("🔨  hammerspoon started..." .. Str_i18n('Hello') .. " " .. hostName, whiteStyle, 6)
 
-hs.notify.new({title='Hammerspoon', informativeText='Config loaded'}):send()
+hs.notify.new({title='Hammerspoon', informativeText='Config loaded for ' .. hostName}):send()
 
 
 -- watcher that reload config file when .hammerspoon changed
@@ -166,19 +165,7 @@ HotKeys = {
 }
 spoon.PopupTranslateSelection:bindHotkeys(HotKeys)
 
--- load and key binding Ksheet spoon
--- that show sheet of all shortcut menu item of focused application
--- chose your prefered keybinding
-hs.loadSpoon("KSheet"):init()
-HotKeys = {
-    toggle = { Hyper, "pad7" },
-    -- toggle = { "ctrl", "pad1" },
-}
-spoon.KSheet:bindHotkeys(HotKeys)
-
 -- move and resize windows from anyware inside focused window
--- TODO: perché skyrocket è sparito dalla directory degli spoon?
--- Comunque nel caso eliminare e provare questo nuovo spoon: https://github.com/franzbu/EnhancedSpaces.spoon
 local SkyRocket = hs.loadSpoon("SkyRocket")
 if SkyRocket ~= nil then
     Sky = SkyRocket:new({
@@ -190,8 +177,25 @@ if SkyRocket ~= nil then
     })
 end
 
--- MCalendar
-hs.loadSpoon('MCalendar')
+-- MCalendar - moved on per host configuration file
+-- hs.loadSpoon('MCalendar')
 
+-- end load common spoon section -------------------------------------------------------
 
--- end load spoon section -------------------------------------------------------
+-- load per hostname configuration, if exist.
+
+-- Safe name manegment - change spaces with hyphens (es. "MacBook-Pro-di-Mario")
+local safe_hostname = hostName:gsub("%s+", "-")
+
+-- name file constructor es. "_host-MacBook-Pro"
+local host_module = "_host-" .. safe_hostname
+local host_file = hs.configdir .. "/" .. host_module .. ".lua"
+
+-- Controlliamo se il file esiste prima di caricarlo
+if (hs.fs.attributes(host_file)) then
+    print("🖥️  Rilevato Host specifico: " .. safe_hostname)
+    require(host_module)
+else
+    print("⚠️  Nessun file specifico trovato per: " .. safe_hostname)
+    print("   (Cercavo: " .. host_module .. ".lua)")
+end
