@@ -43,8 +43,8 @@ special_binding.start()
 -- remap keyboard a method to remap key to another key, see comments in keyremap.lua
 require('keyremap')
 
--- window position managements
-require('win_position')
+-- window position managements 2026-03 disbled for now, we use raycast now.
+-- require('win_position')
 
 -- menubar  my old calendar inset in the menu bar.
 -- local menu_cal = require("menu_cal"):init()
@@ -56,24 +56,21 @@ local netutils = require "netutils"
 local drag_term = require("drag_term")
 
 -- ruler: draw a rectangle on screen with [alt]+[command] to draw a rectangle with transparency to use as highliner or ruler
-local ruler = require("ruler")
+-- local ruler = require("ruler")
 
 -- winswitcher: window switch and positioning management.
-local winswitcher = require("winswitcher")
+-- local winswitcher = require("winswitcher")
 
 -- showkey: show keypress on screen. Binding on ⌃+⌘+shift+p to toggle on/off
 -- è utile in caso di cambio tastiera e per testare nuove configurazioni.
-local showkey = require("showkey")
+-- local showkey = require("showkey")
 
 -- keypadmon: monitor a secondary keyboard, like numpad to focus specific application on demand.
 -- disbled at the moment due to conlifct problem with Maccy application.
 --local keypadmon = require("keypadmon"):new()
 
 -- highlightfocused: show colored border around focused window, all or specific application.
-local highlightfocused = require("highlightfocused")
-
--- snippet: a popup menu for text snippet insertion or clipboard. Binding on Hyper+v 
-local snippet = require("snippet")
+-- local highlightfocused = require("highlightfocused")
 
 -- application watcher - only experiment at the moment.
 -- local appwatcher = require("appwatcher")
@@ -88,12 +85,12 @@ local gemini_helper = require("gemini_helper")
 
 
 -- system icon used around...
-ImgStatusOn = hs.image.imageFromName("NSStatusAvailable")
-ImgStatusNo = hs.image.imageFromName("NSStatusNone")
-ImgStatusOff = hs.image.imageFromName("NSStatusUnavailable")
-ImgStatusPrt = hs.image.imageFromName("NSStatusPartiallyAvailable")
-ImgStatusChk = hs.image.imageFromName("NSMenuOnStateTemplate")
-ImgTest = hs.image.imageFromName("NXdefaulticon")
+--ImgStatusOn = hs.image.imageFromName("NSStatusAvailable")
+--ImgStatusNo = hs.image.imageFromName("NSStatusNone")
+--ImgStatusOff = hs.image.imageFromName("NSStatusUnavailable")
+--ImgStatusPrt = hs.image.imageFromName("NSStatusPartiallyAvailable")
+--ImgStatusChk = hs.image.imageFromName("NSMenuOnStateTemplate")
+--ImgTest = hs.image.imageFromName("NXdefaulticon")
 
 -- imageFromPath example.
 -- CalImageNext = hs.image.imageFromPath(hs.configdir .. "/assets/images/2024.png")
@@ -117,20 +114,20 @@ hs.notify.new({title='Hammerspoon', informativeText='Config loaded for ' .. host
 
 
 -- watcher that reload config file when .hammerspoon changed
-function ReloadConfig(files)
-    DoReload = false
-    for _, file in pairs(files) do
-        if file:sub(-4) == ".lua" then
-            DoReload = true
-        end
-    end
-    if DoReload then
-        hs.reload()
-    end
-end
-
+--function ReloadConfig(files)
+--    DoReload = false
+--    for _, file in pairs(files) do
+--        if file:sub(-4) == ".lua" then
+--            DoReload = true
+--        end
+--    end
+--    if DoReload then
+--        hs.reload()
+--    end
+--end
 -- Watcher for hammerspoon reloading, uncomment to enable.
 -- HammersWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.hammerspoon/", ReloadConfig):start()
+
 
 -- watcher for library folder
 function LibraryFolderWatch()
@@ -143,12 +140,12 @@ LibraryWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/Library/LaunchAgents/
 -- Load external spoon section -------------------------------------------------------
 
 -- hs.loadSpoon('FadeLogo'):start(6)
-local fadeLogo = hs.loadSpoon('FadeLogo')
-if fadeLogo ~= nil then
-    -- fadeLogo.image_size = hs.geometry.size(1024, 768)
-    fadeLogo.image = ImgStatusChk
-    fadeLogo:start(6)
-end
+--local fadeLogo = hs.loadSpoon('FadeLogo')
+--if fadeLogo ~= nil then
+--    -- fadeLogo.image_size = hs.geometry.size(1024, 768)
+--   fadeLogo.image = ImgStatusChk
+--    fadeLogo:start(6)
+--end
 
 --hs.loadSpoon("HCalendar")
 --spoon.HCalendar.showProgress = true
@@ -177,10 +174,24 @@ if SkyRocket ~= nil then
     })
 end
 
--- MCalendar - moved on per host configuration file
--- hs.loadSpoon('MCalendar')
+--------------------------
+-- ClipboardTool        --
+--------------------------
+-- Displays the content of the clipboard
+function SetUpClipboardTool()
+    ClipboardTool = hs.loadSpoon('ClipboardTool')
+    ClipboardTool.show_in_menubar = true
+    ClipboardTool:start()
+    ClipboardTool:bindHotkeys({
+        toggle_clipboard = { Hyper, ";" },
+    })
+end
+SetUpClipboardTool()
 
 -- end load common spoon section -------------------------------------------------------
+
+-- snippet: a popup menu for text snippet insertion or clipboard. Binding on Hyper+v 
+local snippet = require("snippet")
 
 -- load per hostname configuration, if exist.
 
@@ -191,7 +202,7 @@ local safe_hostname = hostName:gsub("%s+", "-")
 local host_module = "_host-" .. safe_hostname
 local host_file = hs.configdir .. "/" .. host_module .. ".lua"
 
--- Controlliamo se il file esiste prima di caricarlo
+-- check file existence and load if exist, otherwise print warning on console.
 if (hs.fs.attributes(host_file)) then
     print("🖥️  Rilevato Host specifico: " .. safe_hostname)
     require(host_module)

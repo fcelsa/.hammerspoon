@@ -43,12 +43,12 @@ local accSpecial = {
 
 local function makePopUpMenu()
     local systemElement = ax.systemWideElement()
-    local currentElement = systemElement:attributeValue("AXFocusedUIElement")
-    local position = currentElement:attributeValue("AXPosition")
-    local rangeElement = currentElement:attributeValue("AXSelectedTextRange")
+    local currentElement = systemElement and systemElement:attributeValue("AXFocusedUIElement") or nil
+    local position = currentElement and currentElement:attributeValue("AXPosition") or nil
+    local rangeElement = currentElement and currentElement:attributeValue("AXSelectedTextRange") or nil
     local elementBounds = {}
 
-    if rangeElement then
+    if currentElement and rangeElement then
         local caretRange = {
             location = rangeElement.location,
             length = 1,
@@ -57,13 +57,19 @@ local function makePopUpMenu()
         elementBounds = currentElement:parameterizedAttributeValue("AXBoundsForRange", caretRange)
     end
 
-    if currentElement.AXValue ~= nil and (currentElement.AXRole == "AXTextArea" or currentElement.AXRole == "AXTextField" or currentElement.AXRole == "AXComboBox") then
-        local elementHeight = currentElement.AXSize.h
+    local currentRole = currentElement and currentElement.AXRole or nil
+    local currentValue = currentElement and currentElement.AXValue or nil
+    local currentSize = currentElement and currentElement.AXSize or nil
+    local isTextInput = currentValue ~= nil and
+        (currentRole == "AXTextArea" or currentRole == "AXTextField" or currentRole == "AXComboBox")
+
+    if isTextInput and position then
+        local elementHeight = currentSize and currentSize.h or 0
         local elementCorrection = 5
         if elementHeight < 50 then
             elementCorrection = elementCorrection + elementHeight
             position = hs.geometry({ x = position.x, y = position.y + elementCorrection })
-        elseif elementHeight > 50 and currentElement.AXRole == "AXTextArea" then
+        elseif elementHeight > 50 and currentRole == "AXTextArea" and elementBounds and elementBounds.x and elementBounds.y and elementBounds.h then
             position = hs.geometry({ x = elementBounds.x, y = elementBounds.y + elementBounds.h + elementCorrection })
         end
 
