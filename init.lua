@@ -22,6 +22,7 @@ Changelog:
     Dec 2025    code, comments and doc refactoring.
                 new: ...
     Feb 2026    new: system to manage configuration per host.
+    Apr 2026    modified ClipboardTool spoon now rocks!
 --]]
 
 -- global key bindings defined here for easier referencing.
@@ -114,6 +115,7 @@ hs.alert.show("🔨  hammerspoon started..." .. Str_i18n('Hello') .. " " .. host
 hs.notify.new({title='Hammerspoon', informativeText='Config loaded for ' .. hostName}):send()
 
 -- Global appearance watcher registry (shared by any utility that depends on light/dark mode).
+--[[
 AppearanceListeners = {}
 
 function RegisterAppearanceListener(name, callback)
@@ -146,6 +148,7 @@ if hs.distributednotifications ~= nil then
         NotifyAppearanceListeners()
     end, "AppleInterfaceThemeChangedNotification"):start()
 end
+--]]
 
 
 -- watcher that reload config file when .hammerspoon changed
@@ -221,7 +224,8 @@ function SetUpClipboardTool()
     ClipboardTool.menubar_icon_dark = "doc.on.clipboard.fill"
     -- Keep memory usage bounded over time without changing day-to-day behavior.
     ClipboardTool.prune_max_age_days = 15
-
+    
+    --[[
     if RegisterAppearanceListener ~= nil then
         RegisterAppearanceListener("ClipboardTool", function()
             if ClipboardTool ~= nil and ClipboardTool.onAppearanceChanged ~= nil then
@@ -229,6 +233,7 @@ function SetUpClipboardTool()
             end
         end)
     end
+    --]]
 
     ClipboardTool:start()
     ClipboardTool:bindHotkeys({
