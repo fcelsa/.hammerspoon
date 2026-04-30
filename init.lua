@@ -43,7 +43,7 @@ special_binding.start()
 -- remap keyboard a method to remap key to another key, see comments in keyremap.lua
 require('keyremap')
 
--- window position managements 2026-03 disbled for now, we use raycast now.
+-- window position managements 2026-04 disbled, use Loop now.
 -- require('win_position')
 
 -- menubar  my old calendar inset in the menu bar.
@@ -63,6 +63,7 @@ local drag_term = require("drag_term")
 
 -- showkey: show keypress on screen. Binding on ⌃+⌘+shift+p to toggle on/off
 -- è utile in caso di cambio tastiera e per testare nuove configurazioni.
+-- si abilita al bisogno.
 -- local showkey = require("showkey")
 
 -- keypadmon: monitor a secondary keyboard, like numpad to focus specific application on demand.
@@ -111,6 +112,40 @@ local hostName = hs.host.localizedName()
 hs.alert.show("🔨  hammerspoon started..." .. Str_i18n('Hello') .. " " .. hostName, whiteStyle, 6)
 
 hs.notify.new({title='Hammerspoon', informativeText='Config loaded for ' .. hostName}):send()
+
+-- Global appearance watcher registry (shared by any utility that depends on light/dark mode).
+AppearanceListeners = {}
+
+function RegisterAppearanceListener(name, callback)
+    if type(name) ~= "string" or name == "" then return false end
+    if type(callback) ~= "function" then return false end
+    AppearanceListeners[name] = callback
+    return true
+end
+
+function UnregisterAppearanceListener(name)
+    AppearanceListeners[name] = nil
+end
+
+local function NotifyAppearanceListeners()
+    for name, callback in pairs(AppearanceListeners) do
+        local ok, err = pcall(callback)
+        if not ok then
+            print("⚠️  Appearance listener failed [" .. tostring(name) .. "]: " .. tostring(err))
+        end
+    end
+end
+
+if AppearanceWatcher ~= nil then
+    AppearanceWatcher:stop()
+    AppearanceWatcher = nil
+end
+
+if hs.distributednotifications ~= nil then
+    AppearanceWatcher = hs.distributednotifications.new(function()
+        NotifyAppearanceListeners()
+    end, "AppleInterfaceThemeChangedNotification"):start()
+end
 
 
 -- watcher that reload config file when .hammerspoon changed
@@ -181,9 +216,23 @@ end
 function SetUpClipboardTool()
     ClipboardTool = hs.loadSpoon('ClipboardTool')
     ClipboardTool.show_in_menubar = true
+    ClipboardTool.use_system_menubar_icon = true
+    ClipboardTool.menubar_icon_light = "doc.on.clipboard"
+    ClipboardTool.menubar_icon_dark = "doc.on.clipboard.fill"
+    -- Keep memory usage bounded over time without changing day-to-day behavior.
+    ClipboardTool.prune_max_age_days = 15
+
+    if RegisterAppearanceListener ~= nil then
+        RegisterAppearanceListener("ClipboardTool", function()
+            if ClipboardTool ~= nil and ClipboardTool.onAppearanceChanged ~= nil then
+                ClipboardTool:onAppearanceChanged()
+            end
+        end)
+    end
+
     ClipboardTool:start()
     ClipboardTool:bindHotkeys({
-        toggle_clipboard = { Hyper, ";" },
+        toggle_clipboard = { Hyper, "-" },
     })
 end
 SetUpClipboardTool()
@@ -210,3 +259,13 @@ else
     print("⚠️  Nessun file specifico trovato per: " .. safe_hostname)
     print("   (Cercavo: " .. host_module .. ".lua)")
 end
+
+-- remapping with macOS hdutil 
+function Key_remapping()
+  -- remap right ctrl to fn/globe:
+  local status = os.execute("hidutil property --set '{\"UserKeyMapping\":[{\"HIDKeyboardModifierMappingSrc\": 0x7000000E4, \"HIDKeyboardModifierMappingDst\": 0xFF00000003}]}'") 
+  if not status then
+    hs.dialog.blockAlert("Key remapping failed", "Check with:\nhidutil property --get UserKeyMapping")
+  end
+end
+Key_remapping()
