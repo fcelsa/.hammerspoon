@@ -1,4 +1,37 @@
+local event_types = hs.eventtap.event.types
+local raw_flag_masks = hs.eventtap.event.rawFlagMasks
+local previous_fn_state = false
+
+-- function to handle the transition of the fn key state
+-- remember in my case fn it's mapped to the right command key via hidutil in init.lua.
+local function showFnTransition(tap_event)
+    local flags = tap_event:getFlags()
+    local raw_flags = tap_event:rawFlags()
+    local fn_is_down = flags.fn or (raw_flags & raw_flag_masks.secondaryFn > 0)
+
+    if fn_is_down == previous_fn_state then
+        return false
+    end
+
+    previous_fn_state = fn_is_down
+
+    print(string.format(
+        "flagsChanged fn=%s rawFlags=0x%X keyCode=%s",
+        tostring(fn_is_down),
+        raw_flags,
+        tostring(tap_event:getKeyCode())
+    ))
+
+    hs.alert.show(fn_is_down and "fn" or "fn up", 0.6)
+    return false
+end
+
 function ShowKeyPress(tap_event)
+    -- needs to handle fn (global) key state transition, otherwise it will not be able to show fn key press.
+    if tap_event:getType() == event_types.flagsChanged then
+        return showFnTransition(tap_event)
+    end
+
     local duration = 1.5 -- popup duration
     local modifiers = "" -- key modifiers string representation
     local flags = tap_event:getFlags()
@@ -125,7 +158,7 @@ function ShowKeyPress(tap_event)
 end
 
 local key_tap = hs.eventtap.new(
-    { hs.eventtap.event.types.keyDown },
+    { event_types.keyDown, event_types.flagsChanged },
     ShowKeyPress
 )
 

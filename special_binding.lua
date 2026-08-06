@@ -64,7 +64,7 @@ local myKeys = {
     hotkey.new({ "ctrl", "shift" }, "pad2", function() handleRightModifierKey("pad2") end),
     hotkey.new({ "ctrl", "shift" }, "pad3", function() handleRightModifierKey("pad3") end),
     hotkey.new({ "ctrl", "shift" }, "pad4", function() handleRightModifierKey("pad4") end),
-    hotkey.new({ "ctrl", "shift" }, "pad5", function() handleRightModifierKey("pad5") end),
+    hotkey.new({ "alt", "shift" }, "pad5", function() handleRightModifierKey("pad5") end),
     hotkey.new({ "ctrl", "shift" }, "pad6", function() handleRightModifierKey("pad6") end),
     hotkey.new({ "ctrl", "shift" }, "pad7", function() handleRightModifierKey("pad7") end),
     hotkey.new({ "ctrl", "shift" }, "pad8", function() handleRightModifierKey("pad8") end),
@@ -88,7 +88,7 @@ local specialBindingHandler = function(e)
     -- deviceRightControl
     -- deviceRightShift
     -- Corresponds to the right modifiers key on the keyboard (if present)
-    if flags & eventtap.event.rawFlagMasks.deviceRightControl > 0 then
+    if flags & eventtap.event.rawFlagMasks.deviceRightAlternate > 0 then
         for _, v in ipairs(myKeys) do
             v:enable()
         end

@@ -38,14 +38,15 @@ require('i18n')
 require('utility')
 
 -- special bindings, this for example to bind right modifiers, see comments in special_binding.lua
-local special_binding = require('special_binding')
-special_binding.start()
+-- local special_binding = require('special_binding')
+-- special_binding.start()
 
 -- remap keyboard a method to remap key to another key, see comments in keyremap.lua
 require('keyremap')
 
 -- window position managements 2026-04 disbled, use Loop now.
--- require('win_position')
+-- removed Loop.app and improved win_position
+require('win_position')
 
 -- menubar  my old calendar inset in the menu bar.
 -- local menu_cal = require("menu_cal"):init()
