@@ -45,7 +45,7 @@ Sentence: "]] .. input .. [["
     })
 
     -- "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-    local url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" ..
+    local url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" ..
         geminiApiKey
 
     -- Send Request to Gemini
