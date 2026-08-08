@@ -1,6 +1,7 @@
 -- clipboard.lua
 -- Marzo 2020
--- Pasteboard/clipboard management code for hammerspoon
+-- Pasteboard/clipboard management code for hammerspoon - now code example only!!
+-- here remain example for the menubar and how iconAscii is made.
 
 
 local obj = {}
@@ -57,7 +58,6 @@ function obj:init()
    os.setlocale("it")
    self.mainMenu = hs.menubar.new()
    self.mainMenu:setIcon(iconAscii)
-   self.mainMenu:setIcon(ImgStatusChk)
    self:mainMenuMaker()
    return self
 end

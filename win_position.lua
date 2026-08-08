@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-field, need-check-nil
 -- win_position
 -- Window placement driven by Fn + numeric keypad, with a lightweight HUD.
 
@@ -8,10 +7,7 @@ local canvas = require("hs.canvas")
 local eventtap = require("hs.eventtap")
 local event_types = eventtap.event.types
 local raw_flag_masks = eventtap.event.rawFlagMasks
-local fs = require("hs.fs")
 local geometry = require("hs.geometry")
-local http = require("hs.http")
-local image = require("hs.image")
 local keycodes = require("hs.keycodes")
 local screen = require("hs.screen")
 local window = require("hs.window")
@@ -32,52 +28,74 @@ local ANIMATION_DURATION = 0.12
 local RESIZE_STEP = 32
 local MIN_WINDOW_WIDTH = 320
 local MIN_WINDOW_HEIGHT = 240
-
-local DEFAULT_ACCENT = { red = 0.18, green = 0.52, blue = 0.82, alpha = 1.00 }
-
-local HUD_THEME = {
-   panelBase = { red = 0.05, green = 0.06, blue = 0.08, alpha = 0.72 },
-   tileBase = { red = 0.08, green = 0.09, blue = 0.12, alpha = 0.58 },
-   tileActiveBase = { red = 0.18, green = 0.52, blue = 0.82, alpha = 0.86 },
-   textStrong = { white = 0.98, alpha = 1.00 },
-   textSoft = { white = 0.78, alpha = 0.96 },
-   textDim = { white = 0.66, alpha = 0.92 },
+local FIXED_THEME = {
+   panelFill = { red = 0.15, green = 0.19, blue = 0.24, alpha = 0.78 },
+   panelStroke = { red = 0.33, green = 0.40, blue = 0.48, alpha = 0.28 },
+   tileFill = { red = 0.26, green = 0.32, blue = 0.39, alpha = 0.22 },
+   tileStroke = { red = 0.54, green = 0.63, blue = 0.72, alpha = 0.18 },
+   tileActiveFill = { red = 0.33, green = 0.40, blue = 0.48, alpha = 0.34 },
+   tileActiveStroke = { red = 0.76, green = 0.84, blue = 0.92, alpha = 0.28 },
+   keyColor = { white = 0.93, alpha = 0.72 },
+   previewFill = { red = 0.93, green = 0.45, blue = 0.18, alpha = 0.14 },
+   previewStroke = { red = 0.98, green = 0.62, blue = 0.26, alpha = 0.96 },
+   previewWindow = { red = 0.96, green = 0.54, blue = 0.22, alpha = 0.98 },
 }
 
-local TITLE_FONT = "HelveticaNeue-Bold"
-local BODY_FONT = "HelveticaNeue"
+local RAW_KEY_ALIASES = {
+   left = "pad4",
+   right = "pad6",
+   up = "arrowUp",
+   down = "arrowDown",
+   pad0 = "snapshotRestore",
+}
+
+local CHARACTER_ALIASES = {
+   ["*"] = "pad*",
+   ["+"] = "pad+",
+   ["-"] = "pad-",
+   ["0"] = "snapshotRestore",
+}
+
 local KEY_FONT = "Menlo-Bold"
-local LABEL_FONT = "HelveticaNeue-Bold"
-local COLOR_SAMPLE_POINTS = {
-   { 0.18, 0.20 },
-   { 0.50, 0.28 },
-   { 0.82, 0.22 },
-   { 0.30, 0.74 },
-   { 0.68, 0.78 },
-}
 
 local KEY_LAYOUTS = {
-   pad7 = { title = "Top Left", mode = "cycle", cycle = "corner", anchorX = 0.0, anchorY = 0.0, legend = "7", short = "TL" },
-   pad8 = { title = "Top", mode = "cycle", cycle = "edge", unit = { x = 0.0, y = 0.0, w = 1.0, h = 0.5 }, legend = "8", short = "Top" },
-   pad9 = { title = "Top Right", mode = "cycle", cycle = "corner", anchorX = 1.0, anchorY = 0.0, legend = "9", short = "TR" },
-   pad4 = { title = "Left", mode = "cycle", cycle = "edge", unit = { x = 0.0, y = 0.0, w = 0.5, h = 1.0 }, legend = "4", short = "Left" },
-   pad5 = { title = "Center", mode = "cycle", cycle = "center", legend = "5", short = "Ctr" },
-   pad6 = { title = "Right", mode = "cycle", cycle = "edge", unit = { x = 0.5, y = 0.0, w = 0.5, h = 1.0 }, legend = "6", short = "Right" },
-   pad1 = { title = "Bottom Left", mode = "cycle", cycle = "corner", anchorX = 0.0, anchorY = 1.0, legend = "1", short = "BL" },
-   pad2 = { title = "Bottom", mode = "cycle", cycle = "edge", unit = { x = 0.0, y = 0.5, w = 1.0, h = 0.5 }, legend = "2", short = "Bot" },
-   pad3 = { title = "Bottom Right", mode = "cycle", cycle = "corner", anchorX = 1.0, anchorY = 1.0, legend = "3", short = "BR" },
-   ["pad*"] = { title = "Next Screen", mode = "screenNext", legend = "*", short = "Next" },
-   ["pad+"] = { title = "Grow", mode = "resize", delta = RESIZE_STEP, legend = "+", short = "+32" },
-   ["pad-"] = { title = "Shrink", mode = "resize", delta = -RESIZE_STEP, legend = "-", short = "-32" },
+   pad7 = { title = "Top Left", mode = "cycle", cycle = "corner", anchorX = 0.0, anchorY = 0.0 },
+   pad8 = { title = "Top", mode = "cycle", cycle = "edge", unit = { x = 0.0, y = 0.0, w = 1.0, h = 0.5 } },
+   pad9 = { title = "Top Right", mode = "cycle", cycle = "corner", anchorX = 1.0, anchorY = 0.0 },
+   pad4 = { title = "Left", mode = "cycle", cycle = "edge", unit = { x = 0.0, y = 0.0, w = 0.5, h = 1.0 } },
+   pad5 = { title = "Center", mode = "cycle", cycle = "center" },
+   pad6 = { title = "Right", mode = "cycle", cycle = "edge", unit = { x = 0.5, y = 0.0, w = 0.5, h = 1.0 } },
+   pad1 = { title = "Bottom Left", mode = "cycle", cycle = "corner", anchorX = 0.0, anchorY = 1.0 },
+   pad2 = { title = "Bottom", mode = "cycle", cycle = "edge", unit = { x = 0.0, y = 0.5, w = 1.0, h = 0.5 } },
+   pad3 = { title = "Bottom Right", mode = "cycle", cycle = "corner", anchorX = 1.0, anchorY = 1.0 },
+   arrowUp = { title = "Top Sizes", mode = "cycle", cycle = "band", anchorX = 0.5, anchorY = 0.0, highlightKey = "pad8" },
+   arrowDown = { title = "Bottom Sizes", mode = "cycle", cycle = "band", anchorX = 0.5, anchorY = 1.0, highlightKey = "pad2" },
+   ["pad*"] = { title = "Next Screen", mode = "screenNext" },
+   ["pad+"] = { title = "Grow", mode = "resize", delta = RESIZE_STEP },
+   ["pad-"] = { title = "Shrink", mode = "resize", delta = -RESIZE_STEP },
+   snapshotRestore = { title = "Restore Snapshot", mode = "snapshotRestore", highlightKey = "pad0" },
 }
 
-local GRID_ROWS = {
-   { "pad7", "pad8", "pad9" },
-   { "pad4", "pad5", "pad6" },
-   { "pad1", "pad2", "pad3" },
+local HUD_KEY_SPECS = {
+   { key = "padclear", legend = "x",     col = 1, row = 1 },
+   { key = "pad=",     legend = "=",     col = 2, row = 1 },
+   { key = "pad/",     legend = "/",     col = 3, row = 1 },
+   { key = "pad*",     legend = "*",     col = 4, row = 1 },
+   { key = "pad7",     legend = "7",     col = 1, row = 2 },
+   { key = "pad8",     legend = "8",     col = 2, row = 2 },
+   { key = "pad9",     legend = "9",     col = 3, row = 2 },
+   { key = "pad-",     legend = "-",     col = 4, row = 2 },
+   { key = "pad4",     legend = "4",     col = 1, row = 3 },
+   { key = "pad5",     legend = "5",     col = 2, row = 3 },
+   { key = "pad6",     legend = "6",     col = 3, row = 3 },
+   { key = "pad+",     legend = "+",     col = 4, row = 3 },
+   { key = "pad1",     legend = "1",     col = 1, row = 4 },
+   { key = "pad2",     legend = "2",     col = 2, row = 4 },
+   { key = "pad3",     legend = "3",     col = 3, row = 4 },
+   { key = "padenter", legend = "Invio", col = 4, row = 4, rowSpan = 2 },
+   { key = "pad0",     legend = "0",     col = 1, row = 5, colSpan = 2 },
+   { key = "pad.",     legend = ".",     col = 3, row = 5 },
 }
-
-local ACTION_ROW = { "pad*", "pad+", "pad-" }
 
 local hud_canvas = nil
 local hud_screen_id = nil
@@ -85,64 +103,26 @@ local hud_elements = nil
 local hud_theme = nil
 local fn_active = false
 local key_tap = nil
-local theme_cache = {}
 local cycle_state = {}
+local snapshot_state = {}
+local last_snapshot_key = nil
+local preview_current_frame = nil
 
 local function clamp(value, min_value, max_value)
-   if value < min_value then
-      return min_value
-   end
-   if value > max_value then
-      return max_value
-   end
+   if value < min_value then return min_value end
+   if value > max_value then return max_value end
    return value
 end
 
-local function rgb(red, green, blue, alpha)
-   return { red = red, green = green, blue = blue, alpha = alpha or 1.00 }
-end
-
-local function mixColors(color_a, color_b, weight)
-   local inverse = 1 - weight
-   return {
-      red = (color_a.red * inverse) + (color_b.red * weight),
-      green = (color_a.green * inverse) + (color_b.green * weight),
-      blue = (color_a.blue * inverse) + (color_b.blue * weight),
-      alpha = (color_a.alpha or 1.00) * inverse + (color_b.alpha or 1.00) * weight,
-   }
-end
-
 local function withAlpha(color, alpha)
-   return {
-      red = color.red,
-      green = color.green,
-      blue = color.blue,
-      alpha = alpha,
-   }
-end
-
-local function brighten(color, amount)
-   return mixColors(color, rgb(1.0, 1.0, 1.0, color.alpha or 1.0), amount)
+   return { red = color.red, green = color.green, blue = color.blue, alpha = alpha }
 end
 
 local function darken(color, amount)
-   return mixColors(color, rgb(0.0, 0.0, 0.0, color.alpha or 1.0), amount)
-end
-
-local function warmTint(color, amount)
    return {
-      red = clamp(color.red + amount, 0.0, 1.0),
-      green = clamp(color.green + (amount * 0.45), 0.0, 1.0),
-      blue = clamp(color.blue - (amount * 0.55), 0.0, 1.0),
-      alpha = color.alpha or 1.0,
-   }
-end
-
-local function coolTint(color, amount)
-   return {
-      red = clamp(color.red - (amount * 0.40), 0.0, 1.0),
-      green = clamp(color.green + (amount * 0.18), 0.0, 1.0),
-      blue = clamp(color.blue + amount, 0.0, 1.0),
+      red = clamp(color.red * (1 - amount), 0.0, 1.0),
+      green = clamp(color.green * (1 - amount), 0.0, 1.0),
+      blue = clamp(color.blue * (1 - amount), 0.0, 1.0),
       alpha = color.alpha or 1.0,
    }
 end
@@ -152,14 +132,11 @@ local function copyFrame(frame)
 end
 
 local function framesMatch(frame_a, frame_b)
-   if frame_a == nil or frame_b == nil then
-      return false
-   end
-
+   if frame_a == nil or frame_b == nil then return false end
    return math.abs(frame_a.x - frame_b.x) < 1
-      and math.abs(frame_a.y - frame_b.y) < 1
-      and math.abs(frame_a.w - frame_b.w) < 1
-      and math.abs(frame_a.h - frame_b.h) < 1
+       and math.abs(frame_a.y - frame_b.y) < 1
+       and math.abs(frame_a.w - frame_b.w) < 1
+       and math.abs(frame_a.h - frame_b.h) < 1
 end
 
 local function fitSizeToScreen(screen_frame, width, height)
@@ -167,12 +144,8 @@ local function fitSizeToScreen(screen_frame, width, height)
 end
 
 local function anchoredCoordinate(origin, span, item_span, anchor)
-   if anchor <= 0.0 then
-      return origin
-   end
-   if anchor >= 1.0 then
-      return origin + span - item_span
-   end
+   if anchor <= 0.0 then return origin end
+   if anchor >= 1.0 then return origin + span - item_span end
    return origin + math.floor((span - item_span) / 2)
 end
 
@@ -200,164 +173,78 @@ local function getWindowStateKey(win)
    return tostring(win:id() or (app_name .. ":" .. (win:title() or "window")))
 end
 
-local function resolveDesktopImagePath(target_screen)
-   local image_url = target_screen:desktopImageURL()
-   if type(image_url) ~= "string" or image_url == "" then
-      return nil
-   end
-
-   local url_parts = http.urlParts(image_url)
-   if url_parts == nil or not url_parts.isFileURL then
-      return nil
-   end
-
-   return url_parts.fileSystemRepresentation or url_parts.path
+local function getThemeForScreen(_)
+   return FIXED_THEME
 end
 
-local function sampleDesktopAccent(target_screen)
-   local image_path = resolveDesktopImagePath(target_screen)
-   if image_path == nil or fs.attributes(image_path) == nil then
-      return DEFAULT_ACCENT, image_path
+local function resolveActionKey(raw_key_name, typed_characters)
+   if KEY_LAYOUTS[raw_key_name] ~= nil then
+      return raw_key_name
    end
 
-   local wallpaper = image.imageFromPath(image_path)
-   if wallpaper == nil then
-      return DEFAULT_ACCENT, image_path
+   local aliased_raw = RAW_KEY_ALIASES[raw_key_name]
+   if aliased_raw ~= nil then
+      return aliased_raw
    end
 
-   local bitmap = wallpaper:bitmapRepresentation({ w = 24, h = 24 })
-   local size = bitmap:size()
-   if size == nil or size.w <= 1 or size.h <= 1 then
-      return DEFAULT_ACCENT, image_path
+   if typed_characters ~= nil and typed_characters ~= "" then
+      return CHARACTER_ALIASES[typed_characters]
    end
 
-   local red = 0
-   local green = 0
-   local blue = 0
-   local samples = 0
+   return nil
+end
 
-   for _, point in ipairs(COLOR_SAMPLE_POINTS) do
-      local x = clamp(math.floor((size.w - 1) * point[1]), 0, size.w - 1)
-      local y = clamp(math.floor((size.h - 1) * point[2]), 0, size.h - 1)
-      local sampled = bitmap:colorAt({ x = x, y = y })
-      if sampled ~= nil then
-         local sample_red = sampled.red or sampled.white or 0
-         local sample_green = sampled.green or sampled.white or 0
-         local sample_blue = sampled.blue or sampled.white or 0
-         red = red + sample_red
-         green = green + sample_green
-         blue = blue + sample_blue
-         samples = samples + 1
+local function storeSnapshot(win, frame, screen_frame)
+   local state_key = getWindowStateKey(win)
+   snapshot_state[state_key] = {
+      windowID = win:id(),
+      frame = copyFrame(frame),
+      screenFrame = copyFrame(screen_frame),
+   }
+   last_snapshot_key = state_key
+end
+
+local function getSnapshotForWindow(win)
+   local state_key = getWindowStateKey(win)
+   local current_id = win:id()
+   local snapshot = snapshot_state[state_key]
+
+   if snapshot ~= nil and snapshot.windowID == current_id then
+      return snapshot, state_key
+   end
+
+   if last_snapshot_key ~= nil then
+      local fallback = snapshot_state[last_snapshot_key]
+      if fallback ~= nil and fallback.windowID == current_id then
+         return fallback, last_snapshot_key
       end
    end
 
-   if samples == 0 then
-      return DEFAULT_ACCENT, image_path
-   end
-
-   local sampled_accent = rgb(red / samples, green / samples, blue / samples, 1.0)
-   return mixColors(sampled_accent, DEFAULT_ACCENT, 0.40), image_path
-end
-
-local function buildThemeForScreen(target_screen)
-   local accent, image_path = sampleDesktopAccent(target_screen)
-   local warm_accent = warmTint(accent, 0.10)
-   local cool_accent = coolTint(accent, 0.12)
-   local panel_fill = withAlpha(mixColors(HUD_THEME.panelBase, cool_accent, 0.18), 0.72)
-   local panel_stroke = withAlpha(brighten(cool_accent, 0.26), 0.60)
-   local accent_bar = withAlpha(brighten(warm_accent, 0.14), 0.78)
-   local accent_glow = withAlpha(warm_accent, 0.24)
-   local tile_fill = withAlpha(mixColors(HUD_THEME.tileBase, cool_accent, 0.12), 0.58)
-   local tile_stroke = withAlpha(brighten(mixColors(HUD_THEME.tileBase, cool_accent, 0.30), 0.10), 0.50)
-   local tile_active_fill = withAlpha(mixColors(HUD_THEME.tileActiveBase, warm_accent, 0.52), 0.88)
-   local tile_active_stroke = withAlpha(brighten(cool_accent, 0.34), 0.94)
-   local preview_fill = withAlpha(mixColors(cool_accent, warm_accent, 0.30), 0.34)
-   local preview_stroke = withAlpha(brighten(cool_accent, 0.30), 0.80)
-   local preview_window = withAlpha(mixColors(warm_accent, cool_accent, 0.42), 0.92)
-
-   return {
-      imagePath = image_path,
-      panelFill = panel_fill,
-      panelStroke = panel_stroke,
-      accentBar = accent_bar,
-      accentGlow = accent_glow,
-      tileFill = tile_fill,
-      tileStroke = tile_stroke,
-      tileActiveFill = tile_active_fill,
-      tileActiveStroke = tile_active_stroke,
-      titleColor = HUD_THEME.textStrong,
-      subtitleColor = HUD_THEME.textSoft,
-      keyColor = HUD_THEME.textStrong,
-      labelColor = HUD_THEME.textDim,
-      labelActiveColor = HUD_THEME.textStrong,
-      previewFill = preview_fill,
-      previewStroke = preview_stroke,
-      previewWindow = preview_window,
-   }
-end
-
-local function getThemeForScreen(target_screen)
-   local screen_key = target_screen:getUUID() or tostring(target_screen:id())
-   local image_path = resolveDesktopImagePath(target_screen)
-   local cached = theme_cache[screen_key]
-
-   if cached ~= nil and cached.imagePath == image_path then
-      return cached
-   end
-
-   local built = buildThemeForScreen(target_screen)
-   theme_cache[screen_key] = built
-   return built
+   return nil, nil
 end
 
 local function getTargetWindow()
    local win = window.focusedWindow() or window.frontmostWindow()
-   if win == nil or not win:isStandard() or not win:isVisible() then
-      return nil
-   end
+   if win == nil or not win:isStandard() or not win:isVisible() then return nil end
 
    local app = win:application()
-   if app == nil then
-      return nil
-   end
+   if app == nil then return nil end
 
    local bundle_id = app:bundleID()
-   if bundle_id ~= nil and EXCLUDED_APPS.bundleIDs[bundle_id] then
-      return nil
-   end
+   if bundle_id ~= nil and EXCLUDED_APPS.bundleIDs[bundle_id] then return nil end
 
    local app_name = app:name() or ""
-   if EXCLUDED_APPS.names[app_name] then
-      return nil
-   end
-
+   if EXCLUDED_APPS.names[app_name] then return nil end
    for _, pattern in ipairs(EXCLUDED_APPS.namePatterns) do
-      if string.find(app_name, pattern) ~= nil then
-         return nil
-      end
+      if string.find(app_name, pattern) ~= nil then return nil end
    end
 
    return win
 end
 
 local function getOverlayScreen(win)
-   if win ~= nil then
-      return win:screen()
-   end
+   if win ~= nil then return win:screen() end
    return screen.mainScreen() or screen.primaryScreen()
-end
-
-local function getAppLabel(win)
-   if win == nil then
-      return "No active window"
-   end
-
-   local app = win:application()
-   if app == nil then
-      return "Window"
-   end
-
-   return app:name() or "Window"
 end
 
 local function applyFrame(win, frame)
@@ -370,10 +257,7 @@ local function computeResizeFrame(win, delta)
    local bounds = win:screen():frame()
    local new_width = clamp(current.w + delta, MIN_WINDOW_WIDTH, bounds.w)
    local new_height = clamp(current.h + delta, MIN_WINDOW_HEIGHT, bounds.h)
-
-   if new_width == current.w and new_height == current.h then
-      return nil
-   end
+   if new_width == current.w and new_height == current.h then return nil end
 
    local width_delta = new_width - current.w
    local height_delta = new_height - current.h
@@ -389,19 +273,14 @@ local function computeNextScreenPlan(win)
    local current_frame = win:frame()
    local current_screen = win:screen()
    local next_screen = current_screen:next()
-
-   if next_screen == nil or next_screen:id() == current_screen:id() then
-      return nil
-   end
+   if next_screen == nil or next_screen:id() == current_screen:id() then return nil end
 
    local next_screen_frame = next_screen:frame()
    local unit = current_screen:toUnitRect(current_frame)
-
    return {
       frame = frameFromUnit(next_screen_frame, unit),
       screenFrame = copyFrame(next_screen_frame),
       overlayScreen = next_screen,
-      title = "Next Screen",
       cycleLabel = "Next screen",
    }
 end
@@ -416,27 +295,36 @@ local function buildCycleSteps(action, state)
 
    if action.cycle == "center" then
       return {
-         { frame = anchoredFrame(screen_frame, original_frame.w, original_frame.h, 0.5, 0.5), cycleLabel = "1/4 Keep size" },
-         { frame = copyFrame(screen_frame), cycleLabel = "2/4 Max" },
+         { frame = anchoredFrame(screen_frame, original_frame.w, original_frame.h, 0.5, 0.5),         cycleLabel = "1/4 Keep size" },
+         { frame = copyFrame(screen_frame),                                                           cycleLabel = "2/4 Max" },
          { frame = anchoredFrame(screen_frame, screen_frame.w * 0.5, screen_frame.h * 0.5, 0.5, 0.5), cycleLabel = "3/4 50%" },
-         { frame = original_frame, cycleLabel = "4/4 Restore", restore = true },
+         { frame = original_frame,                                                                    cycleLabel = "4/4 Restore",  restore = true },
       }
    end
 
    if action.cycle == "corner" then
       return {
-         { frame = anchoredFrame(screen_frame, original_frame.w, original_frame.h, action.anchorX, action.anchorY), cycleLabel = "1/5 Keep size" },
-         { frame = anchoredFrame(screen_frame, screen_frame.w * 0.35, screen_frame.h * 0.35, action.anchorX, action.anchorY), cycleLabel = "2/5 35%" },
-         { frame = anchoredFrame(screen_frame, screen_frame.w * 0.5, screen_frame.h * 0.5, action.anchorX, action.anchorY), cycleLabel = "3/5 50%" },
-         { frame = anchoredFrame(screen_frame, screen_frame.w * 0.75, screen_frame.h * 0.75, action.anchorX, action.anchorY), cycleLabel = "4/5 75%" },
-         { frame = original_frame, cycleLabel = "5/5 Restore", restore = true },
+         { frame = anchoredFrame(screen_frame, original_frame.w, original_frame.h, action.anchorX, action.anchorY),                 cycleLabel = "1/5 Keep size" },
+         { frame = anchoredFrame(screen_frame, screen_frame.w / 3, screen_frame.h / 3, action.anchorX, action.anchorY),             cycleLabel = "2/5 33%" },
+         { frame = anchoredFrame(screen_frame, screen_frame.w * 0.5, screen_frame.h * 0.5, action.anchorX, action.anchorY),         cycleLabel = "3/5 50%" },
+         { frame = anchoredFrame(screen_frame, screen_frame.w * (2 / 3), screen_frame.h * (2 / 3), action.anchorX, action.anchorY), cycleLabel = "4/5 67%" },
+      }
+   end
+
+   if action.cycle == "band" then
+      return {
+         { frame = anchoredFrame(screen_frame, original_frame.w, original_frame.h, action.anchorX, action.anchorY),                 cycleLabel = "1/5 Keep size" },
+         { frame = anchoredFrame(screen_frame, screen_frame.w / 3, screen_frame.h / 3, action.anchorX, action.anchorY),             cycleLabel = "2/5 33%" },
+         { frame = anchoredFrame(screen_frame, screen_frame.w * 0.5, screen_frame.h * 0.5, action.anchorX, action.anchorY),         cycleLabel = "3/5 50%" },
+         { frame = anchoredFrame(screen_frame, screen_frame.w * (2 / 3), screen_frame.h * (2 / 3), action.anchorX, action.anchorY), cycleLabel = "4/5 67%" },
+         { frame = original_frame,                                                                                                  cycleLabel = "5/5 Restore",  restore = true },
       }
    end
 
    if action.cycle == "edge" then
       return {
          { frame = frameFromUnit(screen_frame, action.unit), cycleLabel = "1/2 50%" },
-         { frame = original_frame, cycleLabel = "2/2 Restore", restore = true },
+         { frame = original_frame,                           cycleLabel = "2/2 Restore", restore = true },
       }
    end
 
@@ -451,9 +339,10 @@ local function performCycleAction(win, action, key_name)
    local state = cycle_state[state_key]
 
    if state == nil
-      or state.keyName ~= key_name
-      or state.screenID ~= current_screen:id()
-      or not framesMatch(current_frame, state.lastFrame) then
+       or state.keyName ~= key_name
+       or state.screenID ~= current_screen:id()
+       or not framesMatch(current_frame, state.lastFrame) then
+      storeSnapshot(win, current_frame, current_screen_frame)
       state = {
          keyName = key_name,
          screenID = current_screen:id(),
@@ -465,19 +354,12 @@ local function performCycleAction(win, action, key_name)
    end
 
    local steps = buildCycleSteps(action, state)
-   if steps == nil or #steps == 0 then
-      return nil
-   end
+   if steps == nil or #steps == 0 then return nil end
 
    local next_step = state.stepIndex + 1
-   if next_step > #steps then
-      next_step = 1
-   end
+   if next_step > #steps then next_step = 1 end
 
    local plan = steps[next_step]
-   plan.stepIndex = next_step
-   plan.totalSteps = #steps
-   plan.title = action.title
    plan.screenFrame = current_screen_frame
    plan.overlayScreen = current_screen
 
@@ -496,9 +378,7 @@ end
 
 local function performAction(win, key_name)
    local action = KEY_LAYOUTS[key_name]
-   if action == nil then
-      return nil
-   end
+   if action == nil then return nil end
 
    if action.mode == "cycle" then
       return performCycleAction(win, action, key_name)
@@ -508,34 +388,43 @@ local function performAction(win, key_name)
 
    if action.mode == "resize" then
       local next_frame = computeResizeFrame(win, action.delta)
-      if next_frame == nil then
-         return nil
-      end
-
+      if next_frame == nil then return nil end
       applyFrame(win, next_frame)
       return {
          frame = next_frame,
          screenFrame = copyFrame(win:screen():frame()),
          overlayScreen = win:screen(),
-         title = action.title,
          cycleLabel = action.delta > 0 and "+32 px" or "-32 px",
       }
    end
 
    if action.mode == "screenNext" then
       local plan = computeNextScreenPlan(win)
-      if plan == nil then
-         return nil
-      end
-
+      if plan == nil then return nil end
       applyFrame(win, plan.frame)
       return plan
+   end
+
+   if action.mode == "snapshotRestore" then
+      local snapshot = getSnapshotForWindow(win)
+      if snapshot == nil then return nil end
+
+      clearCycleState(win)
+      applyFrame(win, snapshot.frame)
+      return {
+         frame = copyFrame(snapshot.frame),
+         screenFrame = copyFrame(snapshot.screenFrame),
+         overlayScreen = win:screen(),
+         cycleLabel = "Restore snapshot",
+      }
    end
 
    return nil
 end
 
 local function destroyHud()
+   preview_current_frame = nil
+
    if hud_canvas ~= nil then
       hud_canvas:delete()
       hud_canvas = nil
@@ -545,209 +434,153 @@ local function destroyHud()
    end
 end
 
-local function makeHudFrame(target_screen)
-   local screen_frame = target_screen:frame()
-   local width = clamp(math.floor(screen_frame.w * 0.26), 320, 400)
-   local height = clamp(math.floor(screen_frame.h * 0.40), 340, 430)
-   local x = screen_frame.x + math.floor((screen_frame.w - width) / 2)
-   local y = screen_frame.y + math.floor((screen_frame.h - height) / 2)
+local function applyPreviewFrame(frame)
+   if hud_canvas == nil or hud_elements == nil or hud_theme == nil then return end
+   local preview = hud_elements.preview
+   if preview == nil or preview.window == nil then return end
 
-   return geometry.rect(x, y, width, height)
+   hud_canvas[preview.window].frame = frame
+   hud_canvas[preview.window].fillColor = withAlpha(hud_theme.previewWindow, 0.46)
+   hud_canvas[preview.window].strokeColor = withAlpha(hud_theme.previewStroke, 1.00)
+   preview_current_frame = copyFrame(frame)
 end
 
-local function buildHudElements(frame, subtitle, theme)
-   local elements = {}
-   local element_map = { tiles = {}, subtitle = 0, preview = {} }
+local function makeHudFrame(target_screen)
+   local screen_frame = target_screen:frame()
+   local aspect_ratio = screen_frame.w / screen_frame.h
+   local width = clamp(math.floor(screen_frame.w * 0.24), 300, 460)
+   local height = math.floor(width / aspect_ratio)
 
-   local outer = 18
-   local top = 18
-   local title_height = 20
-   local subtitle_height = 16
-   local preview_top = top + title_height + subtitle_height + 20
-   local preview_height = 88
-   local grid_top = preview_top + preview_height + 16
-   local cell_gap = 10
-   local cell_width = math.floor((frame.w - (outer * 2) - (cell_gap * 2)) / 3)
-   local cell_height = 48
-   local action_top = grid_top + (cell_height * 3) + (cell_gap * 2) + 14
+   if height > math.floor(screen_frame.h * 0.30) then
+      height = math.floor(screen_frame.h * 0.30)
+      width = math.floor(height * aspect_ratio)
+   end
+
+   if height < 180 then
+      height = 180
+      width = math.floor(height * aspect_ratio)
+   end
+
+   return geometry.rect(
+      screen_frame.x + math.floor((screen_frame.w - width) / 2),
+      screen_frame.y + math.floor((screen_frame.h - height) / 2),
+      width,
+      height
+   )
+end
+
+local function buildHudElements(frame, _, theme)
+   local elements = {}
+   local element_map = { tiles = {}, preview = {} }
+
+   local outer = 12
+   local cell_gap = 8
+   local columns = 4
+   local rows = 5
+   local content_frame = {
+      x = outer,
+      y = outer,
+      w = frame.w - (outer * 2),
+      h = frame.h - (outer * 2),
+   }
+
+   local max_keypad_width = math.floor(content_frame.w * 0.48)
+   local max_keypad_height = math.floor(content_frame.h * 0.78)
+   local cell_width = clamp(math.floor((max_keypad_width - (cell_gap * (columns - 1))) / columns), 28, 46)
+   local cell_height = clamp(math.floor((max_keypad_height - (cell_gap * (rows - 1))) / rows), 24, 40)
+   local keypad_frame = {
+      x = content_frame.x + math.floor((content_frame.w - ((cell_width * columns) + (cell_gap * (columns - 1)))) / 2),
+      y = content_frame.y + math.floor((content_frame.h - ((cell_height * rows) + (cell_gap * (rows - 1)))) / 2),
+      w = (cell_width * columns) + (cell_gap * (columns - 1)),
+      h = (cell_height * rows) + (cell_gap * (rows - 1)),
+   }
 
    table.insert(elements, {
       type = "rectangle",
       action = "fill",
-      roundedRectRadii = { xRadius = 22, yRadius = 22 },
+      roundedRectRadii = { xRadius = 18, yRadius = 18 },
       fillColor = theme.panelFill,
-      strokeColor = theme.panelStroke,
-      strokeWidth = 2,
+      strokeColor = withAlpha(theme.panelStroke, 0.24),
+      strokeWidth = 1.0,
       frame = { x = 0, y = 0, w = frame.w, h = frame.h },
    })
 
    table.insert(elements, {
       type = "rectangle",
       action = "fill",
-      roundedRectRadii = { xRadius = 20, yRadius = 20 },
-      fillColor = theme.accentGlow,
-      frame = { x = 14, y = 14, w = frame.w - 28, h = 34 },
+      roundedRectRadii = { xRadius = 18, yRadius = 18 },
+      fillColor = withAlpha(theme.previewFill, 0.16),
+      strokeColor = withAlpha(theme.previewStroke, 0.30),
+      strokeWidth = 1.1,
+      frame = content_frame,
    })
 
-   table.insert(elements, {
-      type = "rectangle",
-      action = "fill",
-      roundedRectRadii = { xRadius = 3, yRadius = 3 },
-      fillColor = theme.accentBar,
-      frame = { x = 22, y = 18, w = 84, h = 4 },
-   })
+   local function addTile(spec)
+      local x = keypad_frame.x + ((spec.col - 1) * (cell_width + cell_gap))
+      local y = keypad_frame.y + ((spec.row - 1) * (cell_height + cell_gap))
+      local width = (cell_width * (spec.colSpan or 1)) + (cell_gap * ((spec.colSpan or 1) - 1))
+      local height = (cell_height * (spec.rowSpan or 1)) + (cell_gap * ((spec.rowSpan or 1) - 1))
+      local is_active = KEY_LAYOUTS[spec.key] ~= nil
 
-   table.insert(elements, {
-      type = "text",
-      text = "Fn Window",
-      textFont = TITLE_FONT,
-      textSize = 19,
-      textColor = theme.titleColor,
-      frame = { x = outer, y = top - 2, w = frame.w - (outer * 2), h = title_height },
-   })
+      local fill_color = is_active and theme.tileFill or withAlpha(darken(theme.tileFill, 0.18), 0.16)
+      local stroke_color = is_active and theme.tileStroke or withAlpha(darken(theme.tileStroke, 0.25), 0.14)
+      local key_color = is_active and theme.keyColor or withAlpha(theme.keyColor, 0.28)
 
-   table.insert(elements, {
-      type = "text",
-      text = subtitle,
-      textFont = BODY_FONT,
-      textSize = 12,
-      textColor = theme.subtitleColor,
-      frame = { x = outer, y = top + 20, w = frame.w - (outer * 2), h = subtitle_height },
-   })
-   element_map.subtitle = #elements
-
-   table.insert(elements, {
-      type = "rectangle",
-      action = "fill",
-      roundedRectRadii = { xRadius = 16, yRadius = 16 },
-      fillColor = withAlpha(theme.previewFill, 0.20),
-      strokeColor = withAlpha(theme.previewStroke, 0.36),
-      strokeWidth = 1.2,
-      frame = { x = outer, y = preview_top, w = frame.w - (outer * 2), h = preview_height },
-   })
-
-   local preview_monitor_frame = {
-      x = outer + 12,
-      y = preview_top + 12,
-      w = 108,
-      h = preview_height - 24,
-   }
-
-   table.insert(elements, {
-      type = "rectangle",
-      action = "fill",
-      roundedRectRadii = { xRadius = 10, yRadius = 10 },
-      fillColor = withAlpha(theme.previewFill, 0.40),
-      strokeColor = withAlpha(theme.previewStroke, 0.70),
-      strokeWidth = 1.4,
-      frame = preview_monitor_frame,
-   })
-
-   table.insert(elements, {
-      type = "rectangle",
-      action = "fill",
-      roundedRectRadii = { xRadius = 7, yRadius = 7 },
-      fillColor = theme.previewWindow,
-      strokeColor = withAlpha(theme.previewStroke, 0.92),
-      strokeWidth = 1.2,
-      frame = { x = preview_monitor_frame.x + 18, y = preview_monitor_frame.y + 12, w = 48, h = 32 },
-   })
-   element_map.preview.window = #elements
-   element_map.preview.monitorFrame = preview_monitor_frame
-
-   table.insert(elements, {
-      type = "text",
-      text = "Current frame",
-      textFont = BODY_FONT,
-      textSize = 12,
-      textColor = theme.titleColor,
-      frame = { x = preview_monitor_frame.x + preview_monitor_frame.w + 14, y = preview_top + 14, w = frame.w - preview_monitor_frame.w - (outer * 2) - 26, h = 18 },
-   })
-   element_map.preview.caption = #elements
-
-   table.insert(elements, {
-      type = "text",
-      text = "Press the same key to rotate layout states",
-      textFont = BODY_FONT,
-      textSize = 11,
-      textColor = theme.labelColor,
-      frame = { x = preview_monitor_frame.x + preview_monitor_frame.w + 14, y = preview_top + 36, w = frame.w - preview_monitor_frame.w - (outer * 2) - 26, h = 30 },
-   })
-   element_map.preview.help = #elements
-
-   local function addTile(key_name, label, short_label, x, y, width, height)
       table.insert(elements, {
          type = "rectangle",
          action = "fill",
          roundedRectRadii = { xRadius = 14, yRadius = 14 },
-         fillColor = theme.tileFill,
-         strokeColor = theme.tileStroke,
-         strokeWidth = 1.5,
+         fillColor = fill_color,
+         strokeColor = stroke_color,
+         strokeWidth = 1.0,
          frame = { x = x, y = y, w = width, h = height },
       })
       local rect_index = #elements
 
       table.insert(elements, {
          type = "text",
-         text = label,
+         text = spec.legend,
          textFont = KEY_FONT,
-         textSize = 16,
-         textColor = theme.keyColor,
-         frame = { x = x + 10, y = y + 6, w = width - 20, h = 18 },
+         textSize = spec.key == "padenter" and 11 or 15,
+         textColor = key_color,
+         frame = { x = x + 7, y = y + math.floor((height - 18) / 2), w = width - 14, h = 18 },
       })
 
-      table.insert(elements, {
-         type = "text",
-         text = short_label,
-         textFont = LABEL_FONT,
-         textSize = 11,
-         textColor = theme.labelColor,
-         frame = { x = x + 10, y = y + height - 20, w = width - 20, h = 14 },
-      })
-      local label_index = #elements
-
-      element_map.tiles[key_name] = {
-         rect = rect_index,
-         label = label_index,
-      }
+      element_map.tiles[spec.key] = { rect = rect_index, label = nil }
    end
 
-   for row_index, row_keys in ipairs(GRID_ROWS) do
-      for col_index, key_name in ipairs(row_keys) do
-         local layout = KEY_LAYOUTS[key_name]
-         local x = outer + ((col_index - 1) * (cell_width + cell_gap))
-         local y = grid_top + ((row_index - 1) * (cell_height + cell_gap))
-         addTile(key_name, layout.legend, layout.short, x, y, cell_width, cell_height)
-      end
+   for _, spec in ipairs(HUD_KEY_SPECS) do
+      addTile(spec)
    end
 
-   for index, key_name in ipairs(ACTION_ROW) do
-      local layout = KEY_LAYOUTS[key_name]
-      local x = outer + ((index - 1) * (cell_width + cell_gap))
-      addTile(key_name, layout.legend, layout.short, x, action_top, cell_width, 42)
-   end
+   table.insert(elements, {
+      type = "rectangle",
+      action = "fill",
+      roundedRectRadii = { xRadius = 12, yRadius = 12 },
+      fillColor = withAlpha(theme.previewWindow, 0.38),
+      strokeColor = withAlpha(theme.previewStroke, 0.98),
+      strokeWidth = 1.8,
+      frame = { x = content_frame.x + 8, y = content_frame.y + 8, w = cell_width, h = cell_height },
+   })
+
+   element_map.preview.window = #elements
+   element_map.preview.contentFrame = content_frame
 
    return elements, element_map
 end
 
 local function updatePreview(preview_info)
-   if hud_canvas == nil or hud_elements == nil or hud_theme == nil then
-      return
-   end
+   if hud_canvas == nil or hud_elements == nil or hud_theme == nil then return end
 
    local preview = hud_elements.preview
-   if preview == nil or preview.window == nil or preview.monitorFrame == nil then
-      return
-   end
+   if preview == nil or preview.window == nil or preview.contentFrame == nil then return end
 
    local screen_frame = preview_info and preview_info.screenFrame or nil
    local target_frame = preview_info and preview_info.frame or nil
-   if screen_frame == nil or target_frame == nil then
-      return
-   end
+   if screen_frame == nil or target_frame == nil then return end
 
-   local inner_margin = 5
-   local monitor = preview.monitorFrame
+   local inner_margin = 8
+   local monitor = preview.contentFrame
    local inner = {
       x = monitor.x + inner_margin,
       y = monitor.y + inner_margin,
@@ -760,20 +593,14 @@ local function updatePreview(preview_info)
    local relative_w = clamp(target_frame.w / screen_frame.w, 0.10, 1.0)
    local relative_h = clamp(target_frame.h / screen_frame.h, 0.10, 1.0)
 
-   hud_canvas[preview.window].frame = {
+   local target_preview_frame = {
       x = inner.x + math.floor(inner.w * relative_x),
       y = inner.y + math.floor(inner.h * relative_y),
       w = math.max(12, math.floor(inner.w * relative_w)),
       h = math.max(10, math.floor(inner.h * relative_h)),
    }
 
-   if preview.caption ~= nil then
-      hud_canvas[preview.caption].text = preview_info.caption or "Current frame"
-   end
-
-   if preview.help ~= nil then
-      hud_canvas[preview.help].text = preview_info.detail or "Press the same key to rotate layout states"
-   end
+   applyPreviewFrame(target_preview_frame)
 end
 
 local function ensureHud(target_screen, subtitle, theme)
@@ -797,37 +624,37 @@ local function ensureHud(target_screen, subtitle, theme)
    hud_theme = theme
 end
 
-local function highlightAction(key_name, subtitle)
-   if hud_canvas == nil or hud_elements == nil or hud_theme == nil then
-      return
-   end
+local function highlightAction(key_name)
+   if hud_canvas == nil or hud_elements == nil or hud_theme == nil then return end
 
    for current_key, indices in pairs(hud_elements.tiles) do
-      hud_canvas[indices.rect].fillColor = hud_theme.tileFill
-      hud_canvas[indices.rect].strokeColor = hud_theme.tileStroke
-      hud_canvas[indices.label].textColor = hud_theme.labelColor
+      if KEY_LAYOUTS[current_key] ~= nil then
+         hud_canvas[indices.rect].fillColor = hud_theme.tileFill
+         hud_canvas[indices.rect].strokeColor = hud_theme.tileStroke
+         if indices.label ~= nil then
+            hud_canvas[indices.label].textColor = hud_theme.labelColor
+         end
+      end
 
       if current_key == key_name then
          hud_canvas[indices.rect].fillColor = hud_theme.tileActiveFill
          hud_canvas[indices.rect].strokeColor = hud_theme.tileActiveStroke
-         hud_canvas[indices.label].textColor = hud_theme.labelActiveColor
+         if indices.label ~= nil then
+            hud_canvas[indices.label].textColor = hud_theme.labelActiveColor
+         end
       end
-   end
-
-   if hud_elements.subtitle > 0 then
-      hud_canvas[hud_elements.subtitle].text = subtitle
    end
 end
 
 local function showHud(win, selected_key, preview_info, overlay_screen)
    local target_screen = overlay_screen or getOverlayScreen(win)
-   if target_screen == nil then
-      return
-   end
+   if target_screen == nil then return end
 
-   local subtitle = getAppLabel(win)
-   ensureHud(target_screen, subtitle, getThemeForScreen(target_screen))
-   highlightAction(selected_key, subtitle)
+   ensureHud(target_screen, "", getThemeForScreen(target_screen))
+
+   if hud_canvas == nil then return end
+
+   highlightAction(selected_key)
    updatePreview(preview_info)
 
    if not hud_canvas:isShowing() then
@@ -837,6 +664,8 @@ local function showHud(win, selected_key, preview_info, overlay_screen)
 end
 
 local function hideHud()
+   preview_current_frame = nil
+
    if hud_canvas ~= nil and hud_canvas:isShowing() then
       hud_canvas:hide(0.08)
    end
@@ -846,21 +675,16 @@ local function handleFlagChange(event)
    local flags = event:getFlags()
    local raw_flags = event:rawFlags()
    local is_fn_down = flags.fn or (raw_flags & raw_flag_masks.secondaryFn > 0)
-
-   if is_fn_down == fn_active then
-      return false
-   end
+   if is_fn_down == fn_active then return false end
 
    fn_active = is_fn_down
-
    if fn_active then
       local win = getTargetWindow()
       if win ~= nil then
          showHud(win, nil, {
             frame = copyFrame(win:frame()),
             screenFrame = copyFrame(win:screen():frame()),
-            caption = "Current frame",
-            detail = "Choose a keypad key to move or cycle the layout",
+            animate = false,
          }, win:screen())
       end
    else
@@ -871,30 +695,23 @@ local function handleFlagChange(event)
 end
 
 local function handleKeyDown(event)
-   if not fn_active then
-      return false
-   end
+   if not fn_active then return false end
 
-   local key_name = keycodes.map[event:getKeyCode()]
-   local action = KEY_LAYOUTS[key_name]
-   if action == nil then
-      return false
-   end
+   local raw_key_name = keycodes.map[event:getKeyCode()]
+   local typed_characters = event:getCharacters(true)
+   local key_name = resolveActionKey(raw_key_name, typed_characters)
+   local action = key_name and KEY_LAYOUTS[key_name] or nil
+   if action == nil then return false end
 
    local win = getTargetWindow()
-   if win == nil then
-      return true
-   end
+   if win == nil then return true end
 
    local plan = performAction(win, key_name)
    if plan ~= nil then
-      showHud(win, key_name, {
+      showHud(win, action.highlightKey or key_name, {
          frame = copyFrame(plan.frame),
          screenFrame = copyFrame(plan.screenFrame),
-         caption = action.title,
-         detail = plan.cycleLabel or action.title,
       }, plan.overlayScreen)
-      highlightAction(key_name, getAppLabel(win) .. " - " .. (plan.cycleLabel or action.title))
    end
 
    return true
@@ -902,23 +719,13 @@ end
 
 local function eventHandler(event)
    local event_type = event:getType()
-
-   if event_type == event_types.flagsChanged then
-      return handleFlagChange(event)
-   end
-
-   if event_type == event_types.keyDown then
-      return handleKeyDown(event)
-   end
-
+   if event_type == event_types.flagsChanged then return handleFlagChange(event) end
+   if event_type == event_types.keyDown then return handleKeyDown(event) end
    return false
 end
 
 function module.start()
-   if key_tap ~= nil then
-      return module
-   end
-
+   if key_tap ~= nil then return module end
    key_tap = eventtap.new({ event_types.flagsChanged, event_types.keyDown }, eventHandler)
    key_tap:start()
    return module
@@ -926,12 +733,10 @@ end
 
 function module.stop()
    fn_active = false
-
    if key_tap ~= nil then
       key_tap:stop()
       key_tap = nil
    end
-
    destroyHud()
    return module
 end

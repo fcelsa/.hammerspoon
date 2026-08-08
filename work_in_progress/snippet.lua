@@ -18,9 +18,10 @@ end
 MyToolBar = require("hs.webview.toolbar")
 
 ChooserToolBar = MyToolBar.new("myConsole", {
-       { id = "select1",                   selectable = true,                                   image = ImgStatusChk },
+       { id = "select1",                   selectable = true,                                   image = hs.image.imageFromName("StatusAvailable") },
        { id = "NSToolbarSpaceItem" },
-       { id = "select2",                   selectable = true,                                   image = ImgStatusPrt },
+       { id = "select2",                   selectable = true,                                   image = hs.image.imageFromName("StatusUnavailable") },
+       { id = "NSToolbarSpaceItem" },
        { id = "notShown",                  selectable = true,                                   image = hs.image.imageFromName("NSBonjour") },
        { id = "NSToolbarFlexibleSpaceItem" },
        { id = "navGroup",                  label = "Navigation",                                groupMembers = { "navLeft", "navRight" } },
@@ -107,7 +108,7 @@ function ApplyLayout(layout)
    if layout.action == 2 then
       local finderWindowOpen = hs.window.filter.new { 'Finder', 'ForkLift' }
       local listOfWindows = finderWindowOpen:getWindows()
-      CascadeWindow(listOfWindows)
+      listOfWindows:setFrame({ x = 0, y = 0, w = 1024, h = 768 })
    end
    if layout.action == 3 then
       currentWin:setFrame(c1)
